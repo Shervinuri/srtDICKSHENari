@@ -16,6 +16,8 @@
             --text-muted: #888;
             --border-color: rgba(255, 108, 0, 0.3);
             --glow-color: rgba(255, 108, 0, 0.5);
+            --success-color: #00ff00;
+            --error-color: #ff0000;
         }
 
         * {
@@ -30,10 +32,9 @@
             color: var(--text-color);
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             min-height: 100vh;
             padding: 20px;
-            overflow: hidden;
             background-image: radial-gradient(var(--panel-bg) 1px, transparent 1px);
             background-size: 15px 15px;
         }
@@ -68,6 +69,7 @@
             font-size: 1.8em;
             text-shadow: 0 0 5px var(--neon-orange), 0 0 10px var(--glow-color);
             letter-spacing: 2px;
+            margin-bottom: 10px;
         }
 
         .upload-area {
@@ -138,7 +140,6 @@
             border-radius: 10px;
             padding: 15px;
             flex-grow: 1;
-            overflow: hidden;
             display: flex;
             flex-direction: column;
         }
@@ -150,36 +151,38 @@
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 8px;
         }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            font-size: 0.9em;
-        }
-        .stat-item span:first-child { color: var(--text-muted); }
-        .stat-item span:last-child { color: var(--neon-orange); font-weight: bold; }
 
         #log-container {
             flex-grow: 1;
             overflow-y: auto;
-            margin-top: 10px;
-            font-size: 0.9em;
-            padding-right: 10px;
+            font-size: 0.85em;
+            padding: 10px;
+            background-color: rgba(0,0,0,0.5);
+            border-radius: 5px;
+            font-family: 'Roboto Mono', monospace;
         }
         #log-container p {
             margin-bottom: 5px;
             white-space: pre-wrap;
-            line-height: 1.5;
+            line-height: 1.4;
+            direction: ltr;
+            text-align: left;
         }
+        #log-container p.success { color: var(--success-color); }
+        #log-container p.error { color: var(--error-color); }
+        #log-container p.info { color: #88ccff; }
+
         .cursor {
             display: inline-block;
             background-color: var(--neon-orange);
-            width: 10px;
+            width: 8px;
+            height: 16px;
+            margin-left: 2px;
             animation: blink 1s step-end infinite;
         }
         @keyframes blink {
-            from, to { background-color: transparent; }
-            50% { background-color: var(--neon-orange); }
+            from, to { opacity: 1; }
+            50% { opacity: 0; }
         }
 
         /* === Digital Display Styles === */
@@ -246,17 +249,26 @@
 
         /* === Responsive Design === */
         @media (max-width: 768px) {
+            body {
+                align-items: flex-start;
+                padding: 10px;
+                overflow-y: auto;
+                height: auto;
+                min-height: 100vh;
+            }
+            
             .grid-container {
                 grid-template-columns: 1fr;
-                grid-template-rows: auto 1fr;
+                grid-template-rows: auto auto auto;
                 height: auto;
                 max-height: none;
                 gap: 15px;
+                min-height: calc(100vh - 20px);
             }
             
             .panel {
                 padding: 15px;
-                min-height: 300px;
+                min-height: auto;
             }
             
             .language-selector {
@@ -273,15 +285,14 @@
                 padding: 2px 0;
             }
             
-            .stats-grid {
-                grid-template-columns: 1fr;
-                font-size: 0.8em;
+            #log-container {
+                max-height: 300px;
             }
         }
 
         @media (max-width: 480px) {
             body {
-                padding: 10px;
+                padding: 8px;
             }
             
             .panel {
@@ -293,16 +304,21 @@
             }
             
             .upload-area p {
-                font-size: 0.9em;
+                font-size: 0.85em;
                 line-height: 1.4;
             }
             
             #fileName {
-                font-size: 0.8em;
+                font-size: 0.75em;
             }
             
             .btn {
                 font-size: 1em;
+                padding: 10px;
+            }
+            
+            .display-grid {
+                gap: 6px;
                 padding: 10px;
             }
         }
@@ -366,7 +382,7 @@
                 <div class="scan-line"></div>
             </div>
             
-            <div class="monitor-screen" id="log-screen">
+            <div class="monitor-screen">
                 <h2>> SYSTEM LOG_</h2>
                 <div id="log-container"></div>
             </div>
@@ -401,7 +417,7 @@
         
         // --- Initialization ---
         function initialize() {
-            logToMonitor(">> System Initialized. Waiting for user input...");
+            logToMonitor("[SYS] System initialized. Ready for input...", "info");
             
             for (const lang in LANGUAGES) {
                 sourceLangSelect.innerHTML += `<option value="${LANGUAGES[lang]}">${lang}</option>`;
@@ -422,10 +438,13 @@
             translateBtn.addEventListener('click', onTranslateClick);
 
             // Start smart loading of the AI model in the background
+            logToMonitor("[AI] Loading translation model in background...", "info");
             modelPromise = MyTranslationPipeline.getInstance();
             modelPromise.then(() => {
                 isModelReady = true;
-                logToMonitor("\n>> AI Core ready. System is fully operational.");
+                logToMonitor("[AI] Model loaded successfully!", "success");
+            }).catch(error => {
+                logToMonitor(`[AI] Model load failed: ${error.message}`, "error");
             });
         }
         
@@ -436,7 +455,7 @@
 
             fileExtension = file.name.split('.').pop().toLowerCase();
             if (!['srt', 'vtt', 'ass'].includes(fileExtension)) {
-                logToMonitor(">> ERROR: Unsupported file format. Please use SRT, VTT, or ASS.", 5);
+                logToMonitor(`[ERR] Unsupported format: ${fileExtension}`, "error");
                 return;
             }
 
@@ -446,33 +465,32 @@
                 originalFileName = file.name;
                 fileNameDiv.textContent = originalFileName;
                 translateBtn.disabled = false;
-                logToMonitor(`\n>> File loaded: ${originalFileName}`);
+                logToMonitor(`[FILE] Loaded: ${originalFileName}`, "success");
                 analyzeFile(fileContent, originalFileName, fileExtension);
             };
             reader.readAsText(file);
         }
 
         function analyzeFile(content, name, format) {
-            const subtitles = parseFile(content, format);
-            const totalLines = subtitles.length;
-            const totalChars = subtitles.reduce((acc, sub) => acc + sub.text.length, 0);
-            const title = name.split('.').slice(0, -1).join('.');
+            try {
+                const subtitles = parseFile(content, format);
+                const totalLines = subtitles.length;
+                const totalChars = subtitles.reduce((acc, sub) => acc + sub.text.length, 0);
+                const title = name.split('.').slice(0, -1).join('.');
 
-            // بروزرسانی دیسپلی دیجیتالی
-            document.getElementById('display-title').textContent = title;
-            document.getElementById('display-format').textContent = format.toUpperCase();
-            document.getElementById('display-lines').textContent = totalLines;
-            document.getElementById('display-chars').textContent = totalChars;
-            document.getElementById('display-status').textContent = 'READY';
-            document.getElementById('display-status').className = 'value status-active';
+                // بروزرسانی دیسپلی دیجیتالی
+                document.getElementById('display-title').textContent = title;
+                document.getElementById('display-format').textContent = format.toUpperCase();
+                document.getElementById('display-lines').textContent = totalLines;
+                document.getElementById('display-chars').textContent = totalChars;
+                document.getElementById('display-status').textContent = 'READY';
+                document.getElementById('display-status').className = 'value status-active';
 
-            // بروزرسانی آمار قدیمی هم
-            document.getElementById('stat-title').textContent = title;
-            document.getElementById('stat-format').textContent = format.toUpperCase();
-            document.getElementById('stat-lines').textContent = totalLines;
-            document.getElementById('stat-chars').textContent = totalChars;
-            
-            logToMonitor(">> File analysis complete. Stats updated.");
+                logToMonitor(`[ANALYSIS] Lines: ${totalLines} | Chars: ${totalChars}`, "info");
+                
+            } catch (error) {
+                logToMonitor(`[ANALYSIS] Failed: ${error.message}`, "error");
+            }
         }
 
         // --- Translation Logic ---
@@ -486,34 +504,36 @@
             document.getElementById('display-status').className = 'value';
             document.getElementById('display-progress').textContent = '0%';
 
-            logToMonitor("\n>> Translation process initiated...");
+            logToMonitor("[TRANSLATE] Starting translation process...", "info");
 
-            if (!isModelReady) {
-                await logWithTypingEffect([
-                    "در حال چک کردن  پیش نیازها و تنظیمات مرورگر شما هستم...",
-                    "این پروسه تنها در اولین اجرا بسته به معماری سیستم شما ممکن است اندکی  زمانبر باشد...",
-                    "اما پس از ستاپ اولیه ، حتی قادر به استفاده آفلاین از این ابزار خواهید بود !"
-                ], 40);
-            }
-            
             try {
+                logToMonitor("[AI] Checking model status...", "info");
                 const translator = await modelPromise;
+                
+                logToMonitor("[PARSE] Parsing subtitle file...", "info");
                 const subtitles = parseFile(fileContent, fileExtension);
+                logToMonitor(`[PARSE] Found ${subtitles.length} subtitle blocks`, "info");
                 
                 const textsToTranslate = subtitles.map(s => s.text);
                 const srcLang = sourceLangSelect.value;
                 const tgtLang = targetLangSelect.value;
 
-                logToMonitor(">> AI Core locked on target. Translating...");
-                const translatedTexts = await translator(textsToTranslate, { src_lang: srcLang, tgt_lang: tgtLang });
-
+                logToMonitor(`[AI] Translating from ${srcLang} to ${tgtLang}...`, "info");
+                
                 // بروزرسانی پیشرفت
                 for (let i = 0; i < subtitles.length; i++) {
-                    subtitles[i].text = translatedTexts[i].translation_text;
+                    const result = await translator(textsToTranslate[i], { src_lang: srcLang, tgt_lang: tgtLang });
+                    subtitles[i].text = result.translation_text;
                     const progress = Math.round(((i + 1) / subtitles.length) * 100);
                     document.getElementById('display-progress').textContent = progress + '%';
+                    
+                    // لاگ هر 10% یکبار
+                    if (progress % 10 === 0 || progress === 100) {
+                        logToMonitor(`[PROGRESS] ${progress}% complete`, "info");
+                    }
                 }
 
+                logToMonitor("[BUILD] Constructing translated file...", "info");
                 const newContent = buildFile(subtitles, fileExtension);
                 const newFileName = `${originalFileName.split('.').slice(0, -1).join('.')}_translated.${fileExtension}`;
                 
@@ -528,11 +548,11 @@
                 document.getElementById('display-status').className = 'value status-active';
                 document.getElementById('display-progress').textContent = '100%';
                 
-                logToMonitor("\n>> Translation complete. File downloaded successfully.");
+                logToMonitor(`[SUCCESS] Translation complete. File saved as: ${newFileName}`, "success");
 
             } catch (error) {
                 console.error('Translation Error:', error);
-                logToMonitor(`>> CRITICAL ERROR: ${error.message}`, 5);
+                logToMonitor(`[ERROR] Translation failed: ${error.message}`, "error");
                 
                 // بروزرسانی وضعیت خطا
                 document.getElementById('display-status').textContent = 'ERROR';
@@ -550,31 +570,13 @@
             handleFileSelect();
         }
         
-        async function logWithTypingEffect(messages, speed) {
-            for (const msg of messages) {
-                await logToMonitor(msg, speed);
-            }
-        }
-
-        function logToMonitor(message, speed = 15) {
-            // در موبایل سرعت رو کم کن
-            if (window.innerWidth <= 768) speed = 25;
+        function logToMonitor(message, type = "normal") {
+            const p = document.createElement('p');
+            p.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            p.className = type;
             
-            return new Promise(resolve => {
-                const p = document.createElement('p');
-                logContainer.appendChild(p);
-                let i = 0;
-                const interval = setInterval(() => {
-                    p.innerHTML = message.substring(0, i+1) + '<span class="cursor">&nbsp;</span>';
-                    i++;
-                    if (i > message.length) {
-                        clearInterval(interval);
-                        p.innerHTML = message; // Remove cursor at the end
-                        logContainer.scrollTop = logContainer.scrollHeight;
-                        resolve();
-                    }
-                }, speed);
-            });
+            logContainer.appendChild(p);
+            logContainer.scrollTop = logContainer.scrollHeight;
         }
 
         class MyTranslationPipeline {
@@ -606,7 +608,7 @@
             return data.trim().split(/\n\n+/).map(block => {
                 const lines = block.split('\n');
                 return {
-                    text: lines.slice(2).join(' ').trim(),
+                    text: lines.slice(2).join('\n').trim(),
                     originalBlock: block
                 };
             });
@@ -616,10 +618,6 @@
             return subtitles.map((sub, i) => {
                 const lines = sub.originalBlock.split('\n');
                 lines[2] = sub.text;
-                // Handle multi-line original text
-                if (lines.length > 3) {
-                    return lines.slice(0, 3).join('\n');
-                }
                 return lines.join('\n');
             }).join('\n\n');
         }
@@ -627,7 +625,7 @@
         function parseVTT(data) {
             const blocks = data.trim().split(/\n\n+/).slice(1); // Skip WEBVTT header
             return blocks.map(block => ({
-                text: block.split('\n').slice(1).join(' ').trim(),
+                text: block.split('\n').slice(1).join('\n').trim(),
                 originalBlock: block
             }));
         }
@@ -637,7 +635,7 @@
             return header + subtitles.map(sub => {
                 const lines = sub.originalBlock.split('\n');
                 lines[1] = sub.text;
-                return lines.slice(0, 2).join('\n');
+                return lines.join('\n');
             }).join('\n\n');
         }
         
