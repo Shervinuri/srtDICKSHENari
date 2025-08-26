@@ -18,6 +18,7 @@
             --glow-color: rgba(255, 108, 0, 0.5);
             --success-color: #00ff00;
             --error-color: #ff0000;
+            --warning-color: #ffff00;
         }
 
         * {
@@ -92,7 +93,70 @@
         #fileInput { display: none; }
         #fileName { font-size: 0.9em; margin-top: 10px; color: var(--text-muted); }
 
-        .language-selector { display: flex; gap: 10px; }
+        .model-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .model-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: rgba(0,0,0,0.3);
+        }
+        
+        .model-info {
+            display: flex;
+            flex-direction: column;
+            text-align: right;
+        }
+        
+        .model-name {
+            font-weight: bold;
+            color: var(--neon-orange);
+        }
+        
+        .model-size {
+            font-size: 0.8em;
+            color: var(--text-muted);
+        }
+        
+        .model-status {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid var(--text-muted);
+        }
+        
+        .model-status.available {
+            background-color: var(--success-color);
+            border-color: var(--success-color);
+            box-shadow: 0 0 5px var(--success-color);
+        }
+        
+        .model-status.unavailable {
+            background-color: var(--error-color);
+            border-color: var(--error-color);
+            box-shadow: 0 0 5px var(--error-color);
+        }
+        
+        .model-status.loading {
+            background-color: var(--warning-color);
+            border-color: var(--warning-color);
+            box-shadow: 0 0 5px var(--warning-color);
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .language-selector { display: flex; gap: 10px; margin-top: 10px; }
         .language-selector div { flex: 1; }
         select {
             width: 100%;
@@ -171,6 +235,7 @@
         #log-container p.success { color: var(--success-color); }
         #log-container p.error { color: var(--error-color); }
         #log-container p.info { color: #88ccff; }
+        #log-container p.warning { color: var(--warning-color); }
 
         .cursor {
             display: inline-block;
@@ -288,6 +353,16 @@
             #log-container {
                 max-height: 300px;
             }
+            
+            .model-item {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            
+            .model-info {
+                text-align: center;
+            }
         }
 
         @media (max-width: 480px) {
@@ -335,6 +410,11 @@
                 <div id="fileName">(.srt, .vtt, .ass)</div>
             </div>
             
+            <div class="model-selector" id="modelSelector">
+                <h3 style="color: var(--neon-orange); text-align: center;">انتخاب مدل ترجمه</h3>
+                <!-- مدل‌ها به صورت داینامیک اضافه می‌شن -->
+            </div>
+            
             <div class="language-selector">
                 <div>
                     <label for="sourceLang">زبان مبدأ:</label>
@@ -346,7 +426,7 @@
                 </div>
             </div>
 
-            <button id="translateBtn" class="btn" disabled>پردازش و ترجمه</button>
+            <button id="translateBtn" class="btn" disabled>شروع ترجمه</button>
         </div>
 
         <div class="panel monitoring-panel">
@@ -402,11 +482,38 @@
         const sourceLangSelect = document.getElementById('sourceLang');
         const targetLangSelect = document.getElementById('targetLang');
         const logContainer = document.getElementById('log-container');
+        const modelSelector = document.getElementById('modelSelector');
         
         // --- Global State ---
         let fileContent = null, originalFileName = '', fileExtension = '';
+        let selectedModel = null;
         let modelPromise = null, isModelReady = false;
         let lastTranslatedContent = null, lastTranslatedFileName = null;
+
+        // --- Models Configuration ---
+        const MODELS = [
+            {
+                id: 'mT5-base',
+                name: 'mT5 Base',
+                model: 'Xenova/mT5-base',
+                size: '200MB',
+                description: 'تعادل خوب بین سرعت و دقت'
+            },
+            {
+                id: 'nllb-200-distilled-100M',
+                name: 'NLLB 100M',
+                model: 'Xenova/nllb-200-distilled-100M',
+                size: '100MB',
+                description: 'سبک و سریع'
+            },
+            {
+                id: 'nllb-200-distilled-600M',
+                name: 'NLLB 600M',
+                model: 'Xenova/nllb-200-distilled-600M',
+                size: '500MB',
+                description: 'دقت بالا'
+            }
+        ];
 
         const LANGUAGES = {
             "فارسی": "fas_Arab", "انگلیسی": "eng_Latn", "آلمانی": "deu_Latn",
@@ -419,6 +526,7 @@
         function initialize() {
             logToMonitor("[SYS] System initialized. Ready for input...", "info");
             
+            // Setup language selectors
             for (const lang in LANGUAGES) {
                 sourceLangSelect.innerHTML += `<option value="${LANGUAGES[lang]}">${lang}</option>`;
                 targetLangSelect.innerHTML += `<option value="${LANGUAGES[lang]}">${lang}</option>`;
@@ -426,6 +534,9 @@
             sourceLangSelect.value = "eng_Latn";
             targetLangSelect.value = "fas_Arab";
 
+            // Setup model selector
+            setupModelSelector();
+            
             // Event Listeners
             uploadArea.addEventListener('click', () => fileInput.click());
             fileInput.addEventListener('change', handleFileSelect);
@@ -436,16 +547,63 @@
             uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
             uploadArea.addEventListener('drop', handleDrop);
             translateBtn.addEventListener('click', onTranslateClick);
-
-            // Start smart loading of the AI model in the background
-            logToMonitor("[AI] Loading translation model in background...", "info");
-            modelPromise = MyTranslationPipeline.getInstance();
-            modelPromise.then(() => {
-                isModelReady = true;
-                logToMonitor("[AI] Model loaded successfully!", "success");
-            }).catch(error => {
-                logToMonitor(`[AI] Model load failed: ${error.message}`, "error");
+        }
+        
+        // --- Model Selector Setup ---
+        function setupModelSelector() {
+            MODELS.forEach(model => {
+                const modelItem = document.createElement('div');
+                modelItem.className = 'model-item';
+                modelItem.innerHTML = `
+                    <div class="model-info">
+                        <span class="model-name">${model.name}</span>
+                        <span class="model-size">${model.size}</span>
+                    </div>
+                    <div class="model-status" id="status-${model.id}"></div>
+                `;
+                modelItem.addEventListener('click', () => selectModel(model));
+                modelSelector.appendChild(modelItem);
+                
+                // Check model availability
+                checkModelAvailability(model);
             });
+        }
+        
+        // --- Model Availability Check ---
+        async function checkModelAvailability(model) {
+            const statusElement = document.getElementById(`status-${model.id}`);
+            statusElement.className = 'model-status loading';
+            
+            try {
+                // Simple fetch to check if model files exist
+                const testUrl = `https://huggingface.co/${model.model}/resolve/main/config.json`;
+                const response = await fetch(testUrl, { method: 'HEAD' });
+                
+                if (response.ok) {
+                    statusElement.className = 'model-status available';
+                } else {
+                    statusElement.className = 'model-status unavailable';
+                }
+            } catch (error) {
+                statusElement.className = 'model-status unavailable';
+            }
+        }
+        
+        // --- Model Selection ---
+        function selectModel(model) {
+            selectedModel = model;
+            logToMonitor(`[MODEL] Selected: ${model.name} (${model.size})`, "info");
+            
+            // Highlight selected model
+            document.querySelectorAll('.model-item').forEach(item => {
+                item.style.borderColor = 'rgba(255, 108, 0, 0.3)';
+            });
+            event.currentTarget.style.borderColor = 'var(--neon-orange)';
+            
+            // Enable translate button if file is loaded
+            if (fileContent) {
+                translateBtn.disabled = false;
+            }
         }
         
         // --- File Handling ---
@@ -464,9 +622,13 @@
                 fileContent = e.target.result;
                 originalFileName = file.name;
                 fileNameDiv.textContent = originalFileName;
-                translateBtn.disabled = false;
                 logToMonitor(`[FILE] Loaded: ${originalFileName}`, "success");
                 analyzeFile(fileContent, originalFileName, fileExtension);
+                
+                // Enable translate button if model is selected
+                if (selectedModel) {
+                    translateBtn.disabled = false;
+                }
             };
             reader.readAsText(file);
         }
@@ -495,7 +657,7 @@
 
         // --- Translation Logic ---
         async function onTranslateClick() {
-            if (!fileContent) return;
+            if (!fileContent || !selectedModel) return;
 
             translateBtn.disabled = true;
             
@@ -504,10 +666,18 @@
             document.getElementById('display-status').className = 'value';
             document.getElementById('display-progress').textContent = '0%';
 
-            logToMonitor("[TRANSLATE] Starting translation process...", "info");
+            logToMonitor(`[TRANSLATE] Starting translation with ${selectedModel.name}...`, "info");
 
             try {
-                logToMonitor("[AI] Checking model status...", "info");
+                // Load model if not loaded
+                if (!modelPromise) {
+                    logToMonitor("[AI] Loading translation model...", "info");
+                    modelPromise = loadModel();
+                    await modelPromise;
+                    isModelReady = true;
+                    logToMonitor("[AI] Model loaded successfully!", "success");
+                }
+                
                 const translator = await modelPromise;
                 
                 logToMonitor("[PARSE] Parsing subtitle file...", "info");
@@ -515,15 +685,29 @@
                 logToMonitor(`[PARSE] Found ${subtitles.length} subtitle blocks`, "info");
                 
                 const textsToTranslate = subtitles.map(s => s.text);
-                const srcLang = sourceLangSelect.value;
-                const tgtLang = targetLangSelect.value;
 
-                logToMonitor(`[AI] Translating from ${srcLang} to ${tgtLang}...`, "info");
+                logToMonitor(`[AI] Translating content...`, "info");
                 
                 // بروزرسانی پیشرفت
+                const translatedTexts = [];
                 for (let i = 0; i < subtitles.length; i++) {
-                    const result = await translator(textsToTranslate[i], { src_lang: srcLang, tgt_lang: tgtLang });
-                    subtitles[i].text = result.translation_text;
+                    let result;
+                    
+                    if (selectedModel.id.includes('mT5')) {
+                        // mT5 format
+                        const prompt = `translate English to Persian: ${textsToTranslate[i]}`;
+                        result = await translator(prompt);
+                        translatedTexts.push({
+                            translation_text: result[0].translation_text
+                        });
+                    } else {
+                        // NLLB format
+                        const srcLang = sourceLangSelect.value;
+                        const tgtLang = targetLangSelect.value;
+                        result = await translator(textsToTranslate[i], { src_lang: srcLang, tgt_lang: tgtLang });
+                        translatedTexts.push(result);
+                    }
+                    
                     const progress = Math.round(((i + 1) / subtitles.length) * 100);
                     document.getElementById('display-progress').textContent = progress + '%';
                     
@@ -562,6 +746,19 @@
             }
         }
 
+        // --- Model Loading ---
+        async function loadModel() {
+            try {
+                if (!window.Xenova) {
+                    throw new Error("Xenova is not available");
+                }
+                return await window.Xenova.pipeline('translation', selectedModel.model);
+            } catch (error) {
+                console.error("Model loading error:", error);
+                throw error;
+            }
+        }
+
         // --- Helper & Utility Functions ---
         function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
         function handleDrop(e) {
@@ -579,28 +776,6 @@
             logContainer.scrollTop = logContainer.scrollHeight;
         }
 
-        class MyTranslationPipeline {
-            static model = 'Xenova/nllb-200-distilled-100M';
-            static instance = null;
-            static async getInstance() {
-                if (this.instance === null) {
-                    try {
-                        // بررسی اینکه آیا Xenova در دسترس هست
-                        if (!window.Xenova) {
-                            throw new Error("Xenova is not available");
-                        }
-                        
-                        // استفاده از Xenova.pipeline
-                        this.instance = await window.Xenova.pipeline('translation', this.model);
-                    } catch (error) {
-                        console.error("Model loading error:", error);
-                        throw error;
-                    }
-                }
-                return this.instance;
-            }
-        }
-        
         function parseFile(content, extension) {
             if (extension === 'srt') return parseSRT(content);
             if (extension === 'vtt') return parseVTT(content);
