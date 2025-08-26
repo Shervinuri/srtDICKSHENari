@@ -580,11 +580,22 @@
         }
 
         class MyTranslationPipeline {
-            static model = 'Xenova/nllb-200-distilled-600M';
+            static model = 'Xenova/nllb-200-distilled-100M';
             static instance = null;
             static async getInstance() {
                 if (this.instance === null) {
-                    this.instance = await pipeline('translation', this.model);
+                    try {
+                        // بررسی اینکه آیا Xenova در دسترس هست
+                        if (!window.Xenova) {
+                            throw new Error("Xenova is not available");
+                        }
+                        
+                        // استفاده از Xenova.pipeline
+                        this.instance = await window.Xenova.pipeline('translation', this.model);
+                    } catch (error) {
+                        console.error("Model loading error:", error);
+                        throw error;
+                    }
                 }
                 return this.instance;
             }
