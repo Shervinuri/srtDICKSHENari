@@ -1,879 +1,460 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>srtDICK☬SHΞNeri</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-color: #0d0d0d;
-            --panel-bg: rgba(20, 20, 20, 0.8);
-            --neon-orange: #ff6c00;
-            --text-color: #e0e0e0;
-            --text-muted: #888;
-            --border-color: rgba(255, 108, 0, 0.3);
-            --glow-color: rgba(255, 108, 0, 0.5);
-            --success-color: #00ff00;
-            --error-color: #ff0000;
-            --warning-color: #ffff00;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: 'Roboto Mono', monospace;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            padding: 20px;
-            background-image: radial-gradient(var(--panel-bg) 1px, transparent 1px);
-            background-size: 15px 15px;
-        }
-
-        .grid-container {
-            display: grid;
-            grid-template-columns: 350px 1fr;
-            gap: 20px;
-            width: 100%;
-            max-width: 1200px;
-            height: 90vh;
-            max-height: 700px;
-        }
-
-        .panel {
-            background-color: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 15px;
-            padding: 25px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 0 15px var(--glow-color), inset 0 0 10px rgba(0, 0, 0, 0.5);
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .control-panel h1 {
-            font-family: 'Orbitron', sans-serif;
-            color: var(--neon-orange);
-            text-align: center;
-            font-size: 1.8em;
-            text-shadow: 0 0 5px var(--neon-orange), 0 0 10px var(--glow-color);
-            letter-spacing: 2px;
-            margin-bottom: 10px;
-        }
-
-        .upload-area {
-            border: 2px dashed var(--border-color);
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-        .upload-area:hover, .upload-area.dragover {
-            border-color: var(--neon-orange);
-            box-shadow: 0 0 10px var(--glow-color);
-        }
-        #fileInput { display: none; }
-        #fileName { font-size: 0.9em; margin-top: 10px; color: var(--text-muted); }
-
-        .model-selector {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .model-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            background-color: rgba(0,0,0,0.3);
-        }
-        
-        .model-info {
-            display: flex;
-            flex-direction: column;
-            text-align: right;
-        }
-        
-        .model-name {
-            font-weight: bold;
-            color: var(--neon-orange);
-        }
-        
-        .model-size {
-            font-size: 0.8em;
-            color: var(--text-muted);
-        }
-        
-        .model-status {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            border: 2px solid var(--text-muted);
-        }
-        
-        .model-status.available {
-            background-color: var(--success-color);
-            border-color: var(--success-color);
-            box-shadow: 0 0 5px var(--success-color);
-        }
-        
-        .model-status.unavailable {
-            background-color: var(--error-color);
-            border-color: var(--error-color);
-            box-shadow: 0 0 5px var(--error-color);
-        }
-        
-        .model-status.loading {
-            background-color: var(--warning-color);
-            border-color: var(--warning-color);
-            box-shadow: 0 0 5px var(--warning-color);
-            animation: pulse 1s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
-        .language-selector { display: flex; gap: 10px; margin-top: 10px; }
-        .language-selector div { flex: 1; }
-        select {
-            width: 100%;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            background-color: rgba(0,0,0,0.3);
-            color: var(--text-color);
-            font-family: inherit;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        select:hover { border-color: var(--neon-orange); }
-
-        .btn {
-            background: linear-gradient(145deg, #ff6c00, #c45300);
-            color: white;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1.1em;
-            font-weight: bold;
-            font-family: 'Orbitron', sans-serif;
-            transition: all 0.2s ease-in-out;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-        }
-        .btn:disabled {
-            background: #555;
-            cursor: not-allowed;
-            box-shadow: none;
-            color: #999;
-        }
-        .btn:not(:disabled):hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0 20px var(--glow-color);
-        }
-
-        .monitoring-panel {
-            gap: 15px;
-        }
-        .monitor-screen {
-            background-color: #000;
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 15px;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        .monitor-screen h2 {
-            font-family: 'Orbitron', sans-serif;
-            color: var(--neon-orange);
-            font-size: 1.1em;
-            margin-bottom: 10px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 8px;
-        }
-
-        #log-container {
-            flex-grow: 1;
-            overflow-y: auto;
-            font-size: 0.85em;
-            padding: 10px;
-            background-color: rgba(0,0,0,0.5);
-            border-radius: 5px;
-            font-family: 'Roboto Mono', monospace;
-        }
-        #log-container p {
-            margin-bottom: 5px;
-            white-space: pre-wrap;
-            line-height: 1.4;
-            direction: ltr;
-            text-align: left;
-        }
-        #log-container p.success { color: var(--success-color); }
-        #log-container p.error { color: var(--error-color); }
-        #log-container p.info { color: #88ccff; }
-        #log-container p.warning { color: var(--warning-color); }
-
-        .cursor {
-            display: inline-block;
-            background-color: var(--neon-orange);
-            width: 8px;
-            height: 16px;
-            margin-left: 2px;
-            animation: blink 1s step-end infinite;
-        }
-        @keyframes blink {
-            from, to { opacity: 1; }
-            50% { opacity: 0; }
-        }
-
-        /* === Digital Display Styles === */
-        .digital-display {
-            position: relative;
-            background-color: #000;
-            border: 1px solid var(--neon-orange);
-            box-shadow: inset 0 0 10px rgba(255,108,0,0.3);
-            font-family: 'Roboto Mono', monospace;
-            overflow: hidden;
-            margin-bottom: 15px;
-        }
-
-        .display-header {
-            color: var(--neon-orange);
-            font-size: 0.9em;
-            padding: 8px 12px;
-            border-bottom: 1px solid rgba(255,108,0,0.3);
-            text-shadow: 0 0 5px var(--glow-color);
-        }
-
-        .display-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            padding: 15px;
-            font-size: 0.85em;
-        }
-
-        .display-item {
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .label {
-            color: #888;
-        }
-
-        .value {
-            color: #ff6c00;
-            text-shadow: 0 0 3px var(--glow-color);
-        }
-
-        .scan-line {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--neon-orange), transparent);
-            animation: scan 3s linear infinite;
-            pointer-events: none;
-        }
-
-        @keyframes scan {
-            0% { top: 0; }
-            100% { top: 100%; }
-        }
-
-        .status-active::after {
-            content: " █";
-            animation: blink 1s infinite;
-        }
-
-        /* === Responsive Design === */
-        @media (max-width: 768px) {
-            body {
-                align-items: flex-start;
-                padding: 10px;
-                overflow-y: auto;
-                height: auto;
-                min-height: 100vh;
-            }
-            
-            .grid-container {
-                grid-template-columns: 1fr;
-                grid-template-rows: auto auto auto;
-                height: auto;
-                max-height: none;
-                gap: 15px;
-                min-height: calc(100vh - 20px);
-            }
-            
-            .panel {
-                padding: 15px;
-                min-height: auto;
-            }
-            
-            .language-selector {
-                flex-direction: column;
-                gap: 15px;
-            }
-            
-            .display-grid {
-                grid-template-columns: 1fr;
-                font-size: 0.75em;
-            }
-            
-            .display-item {
-                padding: 2px 0;
-            }
-            
-            #log-container {
-                max-height: 300px;
-            }
-            
-            .model-item {
-                flex-direction: column;
-                gap: 10px;
-                text-align: center;
-            }
-            
-            .model-info {
-                text-align: center;
-            }
-        }
-
-        @media (max-width: 480px) {
-            body {
-                padding: 8px;
-            }
-            
-            .panel {
-                padding: 12px;
-            }
-            
-            .control-panel h1 {
-                font-size: 1.4em;
-            }
-            
-            .upload-area p {
-                font-size: 0.85em;
-                line-height: 1.4;
-            }
-            
-            #fileName {
-                font-size: 0.75em;
-            }
-            
-            .btn {
-                font-size: 1em;
-                padding: 10px;
-            }
-            
-            .display-grid {
-                gap: 6px;
-                padding: 10px;
-            }
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>srtDICK☬SHΞNeri — Static Subtitle Translator (Pro)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;700&family=Orbitron:wght@400;700&family=Roboto+Mono:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0c0f;--panel:rgba(18,18,18,.8);--ink:#e7e7e7;--muted:#9aa0a6;
+    --neon:#ff6c00;--neonSoft:rgba(255,108,0,.5);--accent:#00ffaa;--err:#ff375f;--ok:#00ff7b;--warn:#ffd60a;
+    --border:rgba(255,108,0,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;font-family:"Vazirmatn",system-ui,-apple-system,"Segoe UI",Roboto,Arial,"Roboto Mono",monospace;background:
+    radial-gradient(transparent 60%,rgba(255,108,0,.03)) center/1800px 1800px fixed,
+    linear-gradient(180deg,#0b0c10,#0b0c0f 60%,#0a0b0e);
+    color:var(--ink);display:flex;align-items:center;justify-content:center;padding:16px}
+  .app{width:100%;max-width:1220px;display:grid;grid-template-columns:360px 1fr;gap:16px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:16px;backdrop-filter:blur(10px);
+        box-shadow:0 0 18px var(--neonSoft),inset 0 0 0 1px rgba(255,255,255,.03);padding:18px;display:flex;flex-direction:column;gap:14px}
+  h1{margin:0;text-align:center;font:700 22px/1.2 "Orbitron",sans-serif;color:var(--neon);letter-spacing:1px;text-shadow:0 0 6px var(--neonSoft)}
+  .subtitle{margin-top:-6px;text-align:center;color:var(--muted);font-size:12px}
+  .drop{border:2px dashed var(--border);border-radius:12px;padding:20px;text-align:center;cursor:pointer;min-height:148px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;transition:.2s}
+  .drop:hover,.drop.drag{border-color:var(--neon);box-shadow:0 0 16px var(--neonSoft)}
+  .hstack{display:flex;gap:10px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  label{font-size:12px;color:var(--muted)}
+  select,input,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:rgba(0,0,0,.35);color:var(--ink);font-family:inherit}
+  textarea{min-height:88px;resize:vertical}
+  .btn{user-select:none;border:0;border-radius:10px;padding:12px 14px;font:700 13px "Orbitron",sans-serif;cursor:pointer;transition:.2s;letter-spacing:.5px}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn-primary{background:linear-gradient(135deg,var(--neon),#c75800);color:#fff;box-shadow:0 8px 20px rgba(0,0,0,.35)}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 0 18px var(--neonSoft)}
+  .btn-success{background:linear-gradient(135deg,#00a86b,#007b4b);color:#fff}
+  .btn-ghost{background:transparent;border:1px dashed var(--border);color:var(--ink)}
+  .kpi{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+  .kpi div{padding:10px 12px;background:#050607;display:grid;gap:4px}
+  .kpi .key{font-size:11px;color:var(--muted)}
+  .kpi .val{font:700 13px "Roboto Mono",monospace;color:var(--neon)}
+  .scan{height:2px;background:linear-gradient(90deg,transparent,var(--neon),transparent);animation:scan 3s linear infinite}
+  @keyframes scan{from{transform:translateY(0)}to{transform:translateY(100%)}}
+  .mono{font-family:"Roboto Mono",monospace}
+  .preview{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .pane{border:1px solid var(--border);border-radius:10px;overflow:hidden}
+  .pane h3{margin:0;padding:10px 12px;border-bottom:1px solid var(--border);font:700 12px "Orbitron";color:var(--neon)}
+  .pane .body{padding:10px;max-height:190px;overflow:auto;direction:ltr;text-align:left}
+  .log{max-height:150px;overflow:auto;border:1px solid var(--border);border-radius:10px;padding:10px;background:rgba(0,0,0,.35);font:12px/1.45 "Roboto Mono",monospace}
+  .log p{margin:0 0 4px}
+  .ok{color:var(--ok)}.err{color:var(--err)}.info{color:#87cefa}.warn{color:var(--warn)}
+  .row{display:flex;gap:10px;align-items:center}
+  .grow{flex:1}
+  .badge{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid var(--border);font-size:11px;color:var(--muted)}
+  .footer{opacity:.7;text-align:center;font-size:11px;margin-top:6px}
+  .switch{display:flex;align-items:center;gap:8px}
+  .switch input{width:auto}
+  .hidden{display:none}
+  @media(max-width:900px){.app{grid-template-columns:1fr}.preview{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
+  <main class="app" id="app">
+    <!-- LEFT: Controls -->
+    <section class="card">
+      <h1>srtDICK☬SHΞNeri</h1>
+      <div class="subtitle">نسخهٔ بازنویسی‌شده، کاملاً استاتیک، بدون بک‌اند</div>
 
-    <div class="grid-container">
-        <div class="panel control-panel">
-            <h1>srtDICK☬SHΞNeri</h1>
-            
-            <div class="upload-area" id="uploadArea">
-                <p>فایل زیرنویس را اینجا رها کنید<br>یا برای انتخاب کلیک کنید</p>
-                <div id="fileName">(.srt, .vtt, .ass)</div>
-            </div>
-            
-            <div class="model-selector" id="modelSelector">
-                <h3 style="color: var(--neon-orange); text-align: center;">انتخاب مدل ترجمه</h3>
-                <!-- مدل‌ها به صورت داینامیک اضافه می‌شن -->
-            </div>
-            
-            <div class="language-selector">
-                <div>
-                    <label for="sourceLang">زبان مبدأ:</label>
-                    <select id="sourceLang"></select>
-                </div>
-                <div>
-                    <label for="targetLang">زبان مقصد:</label>
-                    <select id="targetLang"></select>
-                </div>
-            </div>
+      <div class="drop" id="drop">
+        <div>فایل زیرنویس را اینجا رها کنید یا کلیک کنید</div>
+        <div class="badge">پشتیبانی: .srt · .vtt · .ass</div>
+        <input id="file" type="file" accept=".srt,.vtt,.ass" class="hidden" />
+      </div>
 
-            <button id="translateBtn" class="btn" disabled>شروع ترجمه</button>
+      <div class="grid2">
+        <div>
+          <label for="src">زبان مبدأ</label>
+          <select id="src">
+            <option value="auto">تشخیص خودکار</option>
+            <option value="en">انگلیسی</option>
+            <option value="fa">فارسی</option>
+            <option value="de">آلمانی</option>
+            <option value="fr">فرانسوی</option>
+            <option value="es">اسپانیایی</option>
+          </select>
         </div>
-
-        <div class="panel monitoring-panel">
-            <!-- Digital File Monitor -->
-            <div class="monitor-screen digital-display" id="file-monitor">
-                <div class="display-header">> FILE STATUS MONITOR_</div>
-                <div class="display-grid">
-                    <div class="display-item">
-                        <span class="label">TITLE:</span>
-                        <span class="value" id="display-title">--</span>
-                    </div>
-                    <div class="display-item">
-                        <span class="label">FORMAT:</span>
-                        <span class="value" id="display-format">--</span>
-                    </div>
-                    <div class="display-item">
-                        <span class="label">LINES:</span>
-                        <span class="value" id="display-lines">--</span>
-                    </div>
-                    <div class="display-item">
-                        <span class="label">CHARS:</span>
-                        <span class="value" id="display-chars">--</span>
-                    </div>
-                    <div class="display-item">
-                        <span class="label">STATUS:</span>
-                        <span class="value" id="display-status">WAITING</span>
-                    </div>
-                    <div class="display-item">
-                        <span class="label">PROGRESS:</span>
-                        <span class="value" id="display-progress">0%</span>
-                    </div>
-                </div>
-                <div class="scan-line"></div>
-            </div>
-            
-            <div class="monitor-screen">
-                <h2>> SYSTEM LOG_</h2>
-                <div id="log-container"></div>
-            </div>
+        <div>
+          <label for="tgt">زبان مقصد</label>
+          <select id="tgt">
+            <option value="fa">فارسی</option>
+            <option value="en">انگلیسی</option>
+            <option value="de">آلمانی</option>
+            <option value="fr">فرانسوی</option>
+            <option value="es">اسپانیایی</option>
+          </select>
         </div>
-    </div>
-    
-    <input type="file" id="fileInput" accept=".srt,.vtt,.ass" style="display:none;">
+      </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.1"></script>
+      <div class="grid2">
+        <div>
+          <label for="engine">موتور ترجمه</label>
+          <select id="engine">
+            <option value="pollinations">Pollinations (بدون کلید)</option>
+            <option value="identity">بدون ترجمه (آزمون)</option>
+            <option value="reverse">وارونه‌ساز (Dev)</option>
+          </select>
+        </div>
+        <div>
+          <label for="batch">اندازهٔ دسته (Batch)</label>
+          <input id="batch" type="number" min="1" max="20" value="5" />
+        </div>
+      </div>
 
-    <script type="module">
-        // --- DOM Elements ---
-        const fileInput = document.getElementById('fileInput');
-        const uploadArea = document.getElementById('uploadArea');
-        const translateBtn = document.getElementById('translateBtn');
-        const fileNameDiv = document.getElementById('fileName');
-        const sourceLangSelect = document.getElementById('sourceLang');
-        const targetLangSelect = document.getElementById('targetLang');
-        const logContainer = document.getElementById('log-container');
-        const modelSelector = document.getElementById('modelSelector');
-        
-        // --- Global State ---
-        let fileContent = null, originalFileName = '', fileExtension = '';
-        let selectedModel = null;
-        let modelPromise = null, isModelReady = false;
-        let lastTranslatedContent = null, lastTranslatedFileName = null;
+      <details>
+        <summary class="badge">گزینه‌های پیشرفته</summary>
+        <div class="grid2" style="margin-top:10px">
+          <div>
+            <label for="charLimit">حداکثر کاراکتر هر خط</label>
+            <input id="charLimit" type="number" min="15" max="80" value="42" />
+          </div>
+          <div>
+            <label for="cps">حداکثر سرعت خوانایی (CPS)</label>
+            <input id="cps" type="number" min="10" max="30" value="20" />
+          </div>
+        </div>
+        <div class="hstack">
+          <div class="switch"><input type="checkbox" id="smartBreaks" checked><label for="smartBreaks">شکستن هوشمند سطر</label></div>
+          <div class="switch"><input type="checkbox" id="keepTags" checked><label for="keepTags">حفظ تگ‌های \<i\>, \<b\> …</label></div>
+          <div class="switch"><input type="checkbox" id="bom"><label for="bom">افزودن BOM</label></div>
+        </div>
+        <div>
+          <label for="glossary">واژه‌نامه (from => to در هر خط)</label>
+          <textarea id="glossary" placeholder="AI => هوش مصنوعی\nserver => سرور"></textarea>
+        </div>
+        <div class="grid2">
+          <div>
+            <label for="shift">جابه‌جایی زمان (ms±)</label>
+            <input id="shift" type="number" step="10" value="0" />
+          </div>
+          <div>
+            <label for="suffix">پسوند نام فایل خروجی</label>
+            <input id="suffix" value="translated" />
+          </div>
+        </div>
+      </details>
 
-        // --- Models Configuration ---
-        const MODELS = [
-            {
-                id: 'mT5-base',
-                name: 'mT5 Base',
-                model: 'Xenova/mT5-base',
-                size: '200MB',
-                description: 'تعادل خوب بین سرعت و دقت'
-            },
-            {
-                id: 'nllb-200-distilled-100M',
-                name: 'NLLB 100M',
-                model: 'Xenova/nllb-200-distilled-100M',
-                size: '100MB',
-                description: 'سبک و سریع'
-            },
-            {
-                id: 'nllb-200-distilled-600M',
-                name: 'NLLB 600M',
-                model: 'Xenova/nllb-200-distilled-600M',
-                size: '500MB',
-                description: 'دقت بالا'
-            }
-        ];
+      <div class="row">
+        <button id="btnTranslate" class="btn btn-primary grow" disabled>شروع ترجمه</button>
+        <button id="btnDownload" class="btn btn-success" disabled>دانلود</button>
+      </div>
 
-        const LANGUAGES = {
-            "فارسی": "fas_Arab", "انگلیسی": "eng_Latn", "آلمانی": "deu_Latn",
-            "فرانسوی": "fra_Latn", "اسپانیایی": "spa_Latn", "ایتالیایی": "ita_Latn",
-            "روسی": "rus_Cyrl", "چینی": "zho_Hans", "ژاپنی": "jpn_Jpan",
-            "کره‌ای": "kor_Hang", "عربی": "arb_Arab", "ترکی": "tur_Latn"
-        };
-        
-        // --- Initialization ---
-        function initialize() {
-            logToMonitor("[SYS] System initialized. Ready for input...", "info");
-            
-            // Setup language selectors
-            for (const lang in LANGUAGES) {
-                sourceLangSelect.innerHTML += `<option value="${LANGUAGES[lang]}">${lang}</option>`;
-                targetLangSelect.innerHTML += `<option value="${LANGUAGES[lang]}">${lang}</option>`;
-            }
-            sourceLangSelect.value = "eng_Latn";
-            targetLangSelect.value = "fas_Arab";
+      <div class="kpi mono">
+        <div><span class="key">TITLE</span><span id="kTitle" class="val">--</span></div>
+        <div><span class="key">FORMAT</span><span id="kFmt" class="val">--</span></div>
+        <div><span class="key">CUES</span><span id="kCues" class="val">0</span></div>
+        <div><span class="key">CHARS</span><span id="kChars" class="val">0</span></div>
+        <div><span class="key">STATUS</span><span id="kStatus" class="val">WAIT</span></div>
+        <div><span class="key">PROGRESS</span><span id="kProg" class="val">0%</span></div>
+      </div>
+      <div class="scan"></div>
 
-            // Setup model selector
-            setupModelSelector();
-            
-            // Event Listeners
-            uploadArea.addEventListener('click', () => fileInput.click());
-            fileInput.addEventListener('change', handleFileSelect);
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                uploadArea.addEventListener(eventName, preventDefaults, false);
-            });
-            uploadArea.addEventListener('dragover', () => uploadArea.classList.add('dragover'));
-            uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
-            uploadArea.addEventListener('drop', handleDrop);
-            translateBtn.addEventListener('click', onTranslateClick);
+      <div class="footer">ساخته‌شده برای شروین — CУْPHΞЯ☬SHΞN™</div>
+    </section>
+
+    <!-- RIGHT: Preview & Logs -->
+    <section class="card">
+      <div class="preview">
+        <div class="pane">
+          <h3>> PREVIEW · ORIGINAL</h3>
+          <div class="body mono" id="pOrig">—</div>
+        </div>
+        <div class="pane">
+          <h3>> PREVIEW · TRANSLATED</h3>
+          <div class="body mono" id="pTran">—</div>
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <h3 style="margin:0 0 8px;font:700 12px 'Orbitron';color:var(--neon)">> SYSTEM LOG</h3>
+        <div class="log" id="log"></div>
+      </div>
+    </section>
+  </main>
+
+<script>
+// ===== Utilities =====
+const $ = sel => document.querySelector(sel);
+const log = (msg, cls='info')=>{ const p=document.createElement('p'); p.textContent=msg; p.className=cls; $('#log').appendChild(p); $('#log').scrollTop=999999; }
+const prettyBytes = n => new Intl.NumberFormat('fa').format(n||0);
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+
+// Language names (for prompts)
+const LANG = {en:'English', fa:'Persian', de:'German', fr:'French', es:'Spanish'};
+
+// Glossary parse
+function parseGlossary(text){
+  const pairs=[]; if(!text) return pairs;
+  for(const line of text.split(/\n+/)){
+    const m = line.split('=>'); if(m.length>=2){
+      const from=m[0].trim(); const to=m.slice(1).join('=>').trim(); if(from) pairs.push([from,to]);
+    }
+  } return pairs;
+}
+function applyGlossaryPre(s,pairs){ // protect with placeholders
+  let out=s; pairs.forEach(([from],i)=>{ const token=`§§G${i}§§`; const re=new RegExp(from.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g'); out=out.replace(re,token); });
+  return out;
+}
+function applyGlossaryPost(s,pairs){ let out=s; pairs.forEach(([from,to],i)=>{ const token=`§§G${i}§§`; const re=new RegExp(token,'g'); out=out.replace(re,to); }); return out; }
+
+// ===== Subtitle Parsers =====
+function parseSRT(text){
+  const blocks = text.replace(/\r/g,'').trim().split(/\n\n+/);
+  const cues=[]; let chars=0;
+  for(const block of blocks){
+    const lines=block.split('\n');
+    if(lines.length>=2){
+      let idx=lines[0].trim();
+      let timeLine=lines[1].trim();
+      const textLines=lines.slice(2).join('\n');
+      cues.push({type:'srt', idx, time:timeLine, text:textLines, raw:block});
+      chars+=textLines.length;
+    }
+  }
+  return {cues, chars};
+}
+function buildSRT(cues, texts, addBOM){
+  const out = cues.map((c,i)=>`${c.idx}\n${c.time}\n${texts[i]||c.text}`).join('\n\n');
+  return addBOM ? "\ufeff"+out : out; }
+
+function parseVTT(text){
+  const clean=text.replace(/\r/g,'').trim();
+  const lines=clean.split('\n');
+  let i=0; if(/^WEBVTT/i.test(lines[0])){ i=1; if(lines[1]==='') i=2; }
+  const chunks = clean.slice(lines.slice(0,i).join('\n').length).trim().split(/\n\n+/);
+  const cues=[]; let chars=0;
+  for(const chunk of chunks){
+    const ls=chunk.split('\n');
+    if(!ls.length) continue;
+    // identifier may exist line 0 if not a time
+    let start=0; if(!/-->/.test(ls[0]) && ls[1] && /-->/.test(ls[1])) start=1;
+    const timeLine=ls[start];
+    const textLines=ls.slice(start+1).join('\n');
+    cues.push({type:'vtt', id:start?ls[0]:null, time:timeLine, text:textLines, raw:chunk});
+    chars+=textLines.length;
+  }
+  return {cues, chars};
+}
+function buildVTT(origText, cues, texts, addBOM){
+  const header = /^WEBVTT/i.test(origText) ? origText.split(/\n\n+/)[0] : 'WEBVTT';
+  const body = cues.map((c,i)=> (c.id?c.id+'\n':'') + `${c.time}\n${texts[i]||c.text}`).join('\n\n');
+  const out = header+"\n\n"+body; return addBOM?"\ufeff"+out:out;
+}
+
+function parseASS(text){
+  const clean=text.replace(/\r/g,'');
+  const eventsIdx=clean.indexOf('[Events]'); if(eventsIdx<0) return {cues:[], chars:0, header:clean};
+  const head=clean.slice(0,eventsIdx+8);
+  const rest=clean.slice(eventsIdx+8);
+  const lines=rest.split('\n').map(l=>l.trim());
+  const fmtLine = lines.find(l=>/^Format:/i.test(l)) || 'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text';
+  const fields = fmtLine.replace(/^Format:/i,'').split(',').map(s=>s.trim());
+  const textIndex = Math.max(fields.findIndex(f=>/^Text$/i.test(f)), fields.length-1);
+  const cues=[]; let chars=0;
+  for(const l of lines){
+    if(/^Dialogue:/i.test(l)){
+      const after = l.replace(/^Dialogue:\s*/i,'');
+      const parts = after.split(/,(?=(?:[^\{\}]|\{[^\}]*\})*$)/); // split commas not inside {...}
+      const textPart = parts.slice(textIndex).join(',');
+      const meta = parts.slice(0,textIndex);
+      const time = `${meta[1]} --> ${meta[2]}`; // pseudo timeline for UI
+      cues.push({type:'ass', meta, text:textPart, raw:l, fmtLine, head});
+      chars+=textPart.length;
+    }
+  }
+  return {cues, chars, fmtLine, head};
+}
+function buildASS(orig, cues, texts, addBOM){
+  if(!cues.length) return orig;
+  // rebuild using original header and Format line
+  const headerEnd = orig.indexOf('[Events]');
+  const before = orig.slice(0, headerEnd+8);
+  const after = orig.slice(headerEnd+8).replace(/\r/g,'');
+  const lines = after.split('\n');
+  const fmtIndex = lines.findIndex(l=>/^Format:/i.test(l));
+  const formatLine = fmtIndex>=0?lines[fmtIndex]: 'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text';
+  const fields = formatLine.replace(/^Format:/i,'').split(',').map(s=>s.trim());
+  const textIndex = Math.max(fields.findIndex(f=>/^Text$/i.test(f)), fields.length-1);
+
+  let c=0; const rebuilt = lines.map(l=>{
+    if(/^Dialogue:/i.test(l)){
+      const aft=l.replace(/^Dialogue:\s*/i,'');
+      const parts = aft.split(/,(?=(?:[^\{\}]|\{[^\}]*\})*$)/);
+      const left = parts.slice(0,textIndex);
+      const right = parts.slice(textIndex).join(',');
+      const newText = (texts[c]!==undefined?texts[c]:right);
+      c++; return 'Dialogue: '+ left.join(',')+','+newText;
+    }
+    return l;
+  }).join('\n');
+  const out = before + rebuilt;
+  return addBOM?"\ufeff"+out:out;
+}
+
+// ===== Text helpers =====
+function stripHtmlTagsPreserveBasic(s){ if(!s) return s; return s.replace(/<(?!\/?(i|b|u)\b)[^>]*>/g,''); }
+function smartLineBreak(s,limit){
+  if(!limit||limit<=0) return s; const lines=s.split('\n');
+  return lines.map(line=>{
+    if(line.length<=limit) return line;
+    // break at nearest space or punctuation
+    const words=line.split(' '); let a='',out=[];
+    for(const w of words){ if((a+w).length<=limit) a+=(a?' ':'')+w; else { out.push(a); a=w; } }
+    if(a) out.push(a); return out.join('\n');
+  }).join('\n');
+}
+function enforceCPS(text, durationMs, cpsLimit){
+  if(!cpsLimit||!durationMs) return text; const cps = text.replace(/\s+/g,' ').trim().length / (durationMs/1000);
+  if(cps>cpsLimit){ // try extra breaks
+    return smartLineBreak(text, Math.max(12, Math.floor(text.length * (cpsLimit/cps))));
+  } return text;
+}
+function timeToMs(t){ // 00:00:01,000 or 0:00:01.00 (VTT tolerant)
+  const m=t.match(/(\d\d?):(\d\d):(\d\d)[,.](\d{1,3})/); if(!m) return 0; const ms=m[4].padEnd(3,'0');
+  return (+m[1])*3600000 + (+m[2])*60000 + (+m[3])*1000 + (+ms);
+}
+function msToSrt(ms){ const sign=ms<0?'-':''; ms=Math.abs(ms); const h=String(Math.floor(ms/3600000)).padStart(2,'0'); ms%=3600000; const m=String(Math.floor(ms/60000)).padStart(2,'0'); ms%=60000; const s=String(Math.floor(ms/1000)).padStart(2,'0'); const f=String(ms%1000).padStart(3,'0'); return `${sign}${h}:${m}:${s},${f}`; }
+
+// ===== Translation Engines =====
+async function translatePollinations(texts, src, tgt){
+  // chunk as a single prompt to reduce calls (static-friendly)
+  const prompt = `Translate the numbered lines from ${LANG[src]||'Auto'} to ${LANG[tgt]||tgt}.\n`+
+                 `Keep cues line-breaks (\n) and avoid adding quotes. Return only translations, numbered.\n`+
+                 texts.map((t,i)=>`${i+1}. ${t}`).join('\n');
+  const res = await fetch('https://text.pollinations.ai/openai',{method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({messages:[{role:'user', content: prompt}]})});
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  const data = await res.json();
+  const raw = data.choices?.[0]?.message?.content || '';
+  // split back by leading numbers
+  const arr = raw.split(/\n+/).map(l=>l.replace(/^\s*\d+\.?\s*/,'').trim());
+  return arr.slice(0,texts.length);
+}
+function identityEngine(texts){ return texts; }
+function reverseEngine(texts){ return texts.map(t=>t.split('').reverse().join('')); }
+
+async function translateBatch(batch, src, tgt, engine){
+  const glPairs = parseGlossary($('#glossary').value);
+  const keepTags=$('#keepTags').checked;
+  // prepare
+  const prepared = batch.map(t=>applyGlossaryPre(keepTags?stripHtmlTagsPreserveBasic(t):t, glPairs));
+  let out;
+  if(engine==='identity') out = identityEngine(prepared);
+  else if(engine==='reverse') out = reverseEngine(prepared);
+  else out = await translatePollinations(prepared, src==='auto'?'en':src, tgt);
+  // restore glossary
+  out = out.map(s=>applyGlossaryPost(s, glPairs));
+  return out;
+}
+
+// ===== State =====
+let state={ name:'', ext:'', raw:'', cues:[], kind:'', chars:0, assHeader:'' };
+
+function resetUI(){
+  $('#kTitle').textContent='--'; $('#kFmt').textContent='--'; $('#kCues').textContent='0'; $('#kChars').textContent='0';
+  $('#kStatus').textContent='WAIT'; $('#kProg').textContent='0%'; $('#pOrig').textContent='—'; $('#pTran').textContent='—';
+  $('#btnTranslate').disabled=true; $('#btnDownload').disabled=true; $('#log').innerHTML='';
+}
+
+function analyze(text,name){
+  state={name, ext:name.split('.').pop().toLowerCase(), raw:text, cues:[], kind:'', chars:0, assHeader:''};
+  let parsed;
+  if(state.ext==='srt'){ parsed=parseSRT(text); state.kind='srt'; }
+  else if(state.ext==='vtt'){ parsed=parseVTT(text); state.kind='vtt'; }
+  else if(state.ext==='ass'){ parsed=parseASS(text); state.kind='ass'; state.assHeader=parsed.head; }
+  else { log('[ERR] فرمت پشتیبانی نمی‌شود','err'); return; }
+  state.cues=parsed.cues; state.chars=parsed.chars;
+  // KPI
+  $('#kTitle').textContent=name.replace(/\.[^.]+$/,'');
+  $('#kFmt').textContent=state.ext.toUpperCase();
+  $('#kCues').textContent=prettyBytes(state.cues.length);
+  $('#kChars').textContent=prettyBytes(state.chars);
+  $('#kStatus').textContent='READY';
+  if(state.cues[0]){ $('#pOrig').textContent=state.cues[0].text; }
+  $('#btnTranslate').disabled=false;
+  log(`[FILE] ${name} بارگذاری شد (${state.cues.length} cue)`, 'ok');
+}
+
+// ===== File IO =====
+const drop=$('#drop'), fileInput=$('#file');
+['click'].forEach(ev=> drop.addEventListener(ev, ()=>fileInput.click()));
+['dragenter','dragover'].forEach(ev=> drop.addEventListener(ev, e=>{e.preventDefault(); drop.classList.add('drag');}));
+['dragleave','drop'].forEach(ev=> drop.addEventListener(ev, e=>{e.preventDefault(); drop.classList.remove('drag');}));
+drop.addEventListener('drop', e=>{ const f=e.dataTransfer.files?.[0]; if(f) readFile(f); });
+fileInput.addEventListener('change', e=>{ const f=e.target.files?.[0]; if(f) readFile(f); });
+
+function readFile(f){ const reader=new FileReader(); reader.onload=ev=> analyze(ev.target.result, f.name); reader.readAsText(f); }
+
+// ===== Translate flow =====
+$('#btnTranslate').addEventListener('click', async ()=>{
+  $('#btnTranslate').disabled=true; $('#btnDownload').disabled=true; $('#kStatus').textContent='PROCESS'; $('#kProg').textContent='0%';
+  const src=$('#src').value, tgt=$('#tgt').value, engine=$('#engine').value; const batchSize=Math.max(1,Math.min(20, +$('#batch').value||5));
+  const addBOM=$('#bom').checked; const charLimit=+$('#charLimit').value||0; const cpsLimit=+$('#cps').value||0; const smart=$('#smartBreaks').checked; const shift=+$('#shift').value||0;
+
+  try{
+    const total=state.cues.length; const outTexts=new Array(total);
+    for(let i=0;i<total;i+=batchSize){
+      const slice=state.cues.slice(i,i+batchSize);
+      const texts = slice.map(c=>c.text);
+      const tr = await translateBatch(texts, src, tgt, engine);
+      // post process per cue
+      tr.forEach((t,j)=>{
+        let text=t;
+        if(smart && charLimit>0) text=smartLineBreak(text,charLimit);
+        // enforce CPS if we have timing (SRT/VTT)
+        if(state.kind!=='ass'){
+          const c = slice[j];
+          const [a,b]=c.time.split('-->'); const dur = Math.max(500, timeToMs(b)-timeToMs(a));
+          text = enforceCPS(text, dur, cpsLimit);
         }
-        
-        // --- Model Selector Setup ---
-        function setupModelSelector() {
-            MODELS.forEach(model => {
-                const modelItem = document.createElement('div');
-                modelItem.className = 'model-item';
-                modelItem.innerHTML = `
-                    <div class="model-info">
-                        <span class="model-name">${model.name}</span>
-                        <span class="model-size">${model.size}</span>
-                    </div>
-                    <div class="model-status" id="status-${model.id}"></div>
-                `;
-                modelItem.addEventListener('click', () => selectModel(model));
-                modelSelector.appendChild(modelItem);
-                
-                // Check model availability
-                checkModelAvailability(model);
-            });
-        }
-        
-        // --- Model Availability Check ---
-        async function checkModelAvailability(model) {
-            const statusElement = document.getElementById(`status-${model.id}`);
-            statusElement.className = 'model-status loading';
-            
-            try {
-                // Simple fetch to check if model files exist
-                const testUrl = `https://huggingface.co/${model.model}/resolve/main/config.json`;
-                const response = await fetch(testUrl, { method: 'HEAD' });
-                
-                if (response.ok) {
-                    statusElement.className = 'model-status available';
-                } else {
-                    statusElement.className = 'model-status unavailable';
-                }
-            } catch (error) {
-                statusElement.className = 'model-status unavailable';
-            }
-        }
-        
-        // --- Model Selection ---
-        function selectModel(model) {
-            selectedModel = model;
-            logToMonitor(`[MODEL] Selected: ${model.name} (${model.size})`, "info");
-            
-            // Highlight selected model
-            document.querySelectorAll('.model-item').forEach(item => {
-                item.style.borderColor = 'rgba(255, 108, 0, 0.3)';
-            });
-            event.currentTarget.style.borderColor = 'var(--neon-orange)';
-            
-            // Enable translate button if file is loaded
-            if (fileContent) {
-                translateBtn.disabled = false;
-            }
-        }
-        
-        // --- File Handling ---
-        function handleFileSelect() {
-            const file = fileInput.files[0];
-            if (!file) return;
+        outTexts[i+j]=text;
+      });
+      $('#kProg').textContent=Math.round(((i+slice.length)/total)*100)+'%';
+      if(i===0){ $('#pTran').textContent=outTexts[0]||'—'; $('#pOrig').textContent=state.cues[0]?.text||'—'; }
+      await sleep(150);
+    }
 
-            fileExtension = file.name.split('.').pop().toLowerCase();
-            if (!['srt', 'vtt', 'ass'].includes(fileExtension)) {
-                logToMonitor(`[ERR] Unsupported format: ${fileExtension}`, "error");
-                return;
-            }
+    // build output
+    let out='';
+    if(state.kind==='srt'){
+      const shifted = shift? state.cues.map(c=>{ const m=c.time.match(/^(.*?)[\n\r]*$/); const [a,b]=c.time.split('-->'); const sA=msToSrt(timeToMs(a.trim())+shift); const sB=msToSrt(timeToMs(b.trim())+shift); return {...c, time:`${sA} --> ${sB}`}; }): state.cues;
+      out = buildSRT(shifted, outTexts, addBOM);
+    } else if(state.kind==='vtt'){
+      const shifted = shift? state.cues.map(c=>{ const [a,b]=c.time.split('-->'); const sA=msToSrt(timeToMs(a.trim())+shift).replace(',', '.'); const sB=msToSrt(timeToMs(b.trim())+shift).replace(',', '.'); return {...c, time:`${sA} --> ${sB}`}; }): state.cues;
+      out = buildVTT(state.raw, shifted, outTexts, addBOM);
+    } else if(state.kind==='ass'){
+      out = buildASS(state.raw, state.cues, outTexts, addBOM);
+    }
 
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                fileContent = e.target.result;
-                originalFileName = file.name;
-                fileNameDiv.textContent = originalFileName;
-                logToMonitor(`[FILE] Loaded: ${originalFileName}`, "success");
-                analyzeFile(fileContent, originalFileName, fileExtension);
-                
-                // Enable translate button if model is selected
-                if (selectedModel) {
-                    translateBtn.disabled = false;
-                }
-            };
-            reader.readAsText(file);
-        }
+    window.__translated={name: state.name.replace(/\.[^.]+$/, ''), ext: state.ext, blob: new Blob([out], {type:'text/plain;charset=utf-8'})};
+    $('#btnDownload').disabled=false; $('#kStatus').textContent='DONE'; $('#kProg').textContent='100%';
+    log('[SUCCESS] ترجمه کامل شد و آمادهٔ دانلود است','ok');
+  } catch(err){
+    console.error(err); log('[ERROR] '+err.message,'err'); $('#kStatus').textContent='ERROR';
+  } finally { $('#btnTranslate').disabled=false; }
+});
 
-        function analyzeFile(content, name, format) {
-            try {
-                const subtitles = parseFile(content, format);
-                const totalLines = subtitles.length;
-                const totalChars = subtitles.reduce((acc, sub) => acc + sub.text.length, 0);
-                const title = name.split('.').slice(0, -1).join('.');
+$('#btnDownload').addEventListener('click',()=>{
+  const sfx = $('#suffix').value||'translated';
+  const out = window.__translated; if(!out) return;
+  const a=document.createElement('a'); a.href=URL.createObjectURL(out.blob); a.download=`${out.name}_${sfx}.${out.ext}`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(a.href);
+  log('[DOWNLOAD] فایل خروجی ذخیره شد','ok');
+});
 
-                // بروزرسانی دیسپلی دیجیتالی
-                document.getElementById('display-title').textContent = title;
-                document.getElementById('display-format').textContent = format.toUpperCase();
-                document.getElementById('display-lines').textContent = totalLines;
-                document.getElementById('display-chars').textContent = totalChars;
-                document.getElementById('display-status').textContent = 'READY';
-                document.getElementById('display-status').className = 'value status-active';
-
-                logToMonitor(`[ANALYSIS] Lines: ${totalLines} | Chars: ${totalChars}`, "info");
-                
-            } catch (error) {
-                logToMonitor(`[ANALYSIS] Failed: ${error.message}`, "error");
-            }
-        }
-
-        // --- Translation Logic ---
-        async function onTranslateClick() {
-            if (!fileContent || !selectedModel) return;
-
-            translateBtn.disabled = true;
-            
-            // بروزرسانی وضعیت دیجیتالی
-            document.getElementById('display-status').textContent = 'PROCESSING';
-            document.getElementById('display-status').className = 'value';
-            document.getElementById('display-progress').textContent = '0%';
-
-            logToMonitor(`[TRANSLATE] Starting translation with ${selectedModel.name}...`, "info");
-
-            try {
-                // Load model if not loaded
-                if (!modelPromise) {
-                    logToMonitor("[AI] Loading translation model...", "info");
-                    modelPromise = loadModel();
-                    await modelPromise;
-                    isModelReady = true;
-                    logToMonitor("[AI] Model loaded successfully!", "success");
-                }
-                
-                const translator = await modelPromise;
-                
-                logToMonitor("[PARSE] Parsing subtitle file...", "info");
-                const subtitles = parseFile(fileContent, fileExtension);
-                logToMonitor(`[PARSE] Found ${subtitles.length} subtitle blocks`, "info");
-                
-                const textsToTranslate = subtitles.map(s => s.text);
-
-                logToMonitor(`[AI] Translating content...`, "info");
-                
-                // بروزرسانی پیشرفت
-                const translatedTexts = [];
-                for (let i = 0; i < subtitles.length; i++) {
-                    let result;
-                    
-                    if (selectedModel.id.includes('mT5')) {
-                        // mT5 format
-                        const prompt = `translate English to Persian: ${textsToTranslate[i]}`;
-                        result = await translator(prompt);
-                        translatedTexts.push({
-                            translation_text: result[0].translation_text
-                        });
-                    } else {
-                        // NLLB format
-                        const srcLang = sourceLangSelect.value;
-                        const tgtLang = targetLangSelect.value;
-                        result = await translator(textsToTranslate[i], { src_lang: srcLang, tgt_lang: tgtLang });
-                        translatedTexts.push(result);
-                    }
-                    
-                    const progress = Math.round(((i + 1) / subtitles.length) * 100);
-                    document.getElementById('display-progress').textContent = progress + '%';
-                    
-                    // لاگ هر 10% یکبار
-                    if (progress % 10 === 0 || progress === 100) {
-                        logToMonitor(`[PROGRESS] ${progress}% complete`, "info");
-                    }
-                }
-
-                logToMonitor("[BUILD] Constructing translated file...", "info");
-                const newContent = buildFile(subtitles, fileExtension);
-                const newFileName = `${originalFileName.split('.').slice(0, -1).join('.')}_translated.${fileExtension}`;
-                
-                // ذخیره برای دانلود مجدد
-                lastTranslatedContent = newContent;
-                lastTranslatedFileName = newFileName;
-                
-                downloadFile(newContent, newFileName);
-                
-                // بروزرسانی وضعیت نهایی
-                document.getElementById('display-status').textContent = 'COMPLETE';
-                document.getElementById('display-status').className = 'value status-active';
-                document.getElementById('display-progress').textContent = '100%';
-                
-                logToMonitor(`[SUCCESS] Translation complete. File saved as: ${newFileName}`, "success");
-
-            } catch (error) {
-                console.error('Translation Error:', error);
-                logToMonitor(`[ERROR] Translation failed: ${error.message}`, "error");
-                
-                // بروزرسانی وضعیت خطا
-                document.getElementById('display-status').textContent = 'ERROR';
-                document.getElementById('display-status').className = 'value';
-            } finally {
-                translateBtn.disabled = false;
-            }
-        }
-
-        // --- Model Loading ---
-        async function loadModel() {
-            try {
-                if (!window.Xenova) {
-                    throw new Error("Xenova is not available");
-                }
-                return await window.Xenova.pipeline('translation', selectedModel.model);
-            } catch (error) {
-                console.error("Model loading error:", error);
-                throw error;
-            }
-        }
-
-        // --- Helper & Utility Functions ---
-        function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
-        function handleDrop(e) {
-            uploadArea.classList.remove('dragover');
-            fileInput.files = e.dataTransfer.files;
-            handleFileSelect();
-        }
-        
-        function logToMonitor(message, type = "normal") {
-            const p = document.createElement('p');
-            p.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-            p.className = type;
-            
-            logContainer.appendChild(p);
-            logContainer.scrollTop = logContainer.scrollHeight;
-        }
-
-        function parseFile(content, extension) {
-            if (extension === 'srt') return parseSRT(content);
-            if (extension === 'vtt') return parseVTT(content);
-            if (extension === 'ass') return parseASS(content);
-            return [];
-        }
-
-        function buildFile(subtitles, extension) {
-            if (extension === 'srt') return buildSRT(subtitles);
-            if (extension === 'vtt') return buildVTT(subtitles);
-            if (extension === 'ass') return buildASS(subtitles);
-            return '';
-        }
-
-        function parseSRT(data) {
-            return data.trim().split(/\n\n+/).map(block => {
-                const lines = block.split('\n');
-                return {
-                    text: lines.slice(2).join('\n').trim(),
-                    originalBlock: block
-                };
-            });
-        }
-
-        function buildSRT(subtitles) {
-            return subtitles.map((sub, i) => {
-                const lines = sub.originalBlock.split('\n');
-                lines[2] = sub.text;
-                return lines.join('\n');
-            }).join('\n\n');
-        }
-
-        function parseVTT(data) {
-            const blocks = data.trim().split(/\n\n+/).slice(1); // Skip WEBVTT header
-            return blocks.map(block => ({
-                text: block.split('\n').slice(1).join('\n').trim(),
-                originalBlock: block
-            }));
-        }
-        
-        function buildVTT(subtitles) {
-            const header = 'WEBVTT\n\n';
-            return header + subtitles.map(sub => {
-                const lines = sub.originalBlock.split('\n');
-                lines[1] = sub.text;
-                return lines.join('\n');
-            }).join('\n\n');
-        }
-        
-        function parseASS(data) {
-            const eventsSection = data.split('[Events]')[1];
-            if (!eventsSection) return [];
-            return eventsSection.trim().split('\n')
-                .filter(line => line.startsWith('Dialogue:'))
-                .map(line => {
-                    const parts = line.split(',');
-                    return {
-                        text: parts.slice(9).join(','),
-                        originalLine: line
-                    };
-                });
-        }
-        
-        function buildASS(subtitles) {
-            const parts = fileContent.split('[Events]');
-            if (parts.length < 2) return '';
-
-            const header = parts[0] + '[Events]\n' + parts[1].trim().split('\n').slice(0, 1).join('\n') + '\n';
-
-            let subIndex = 0;
-            const originalLines = parts[1].trim().split('\n').slice(1);
-            const translatedLines = originalLines.map(line => {
-                if (line.startsWith('Dialogue:')) {
-                    const sub = subtitles[subIndex++];
-                    if (sub && sub.originalLine) {
-                        const lineParts = sub.originalLine.split(',');
-                        lineParts[9] = sub.text;
-                        return lineParts.join(',');
-                    }
-                }
-                return line;
-            });
-            return header + translatedLines.join('\n');
-        }
-
-        function downloadFile(content, fileName) {
-            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = fileName;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-        
-        initialize();
-    </script>
+// Init
+resetUI();
+log('[SYS] آماده برای پردازش زیرنویس — بدون بک‌اند','info');
+</script>
 </body>
 </html>
