@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Static SRT TS Tool</title>
+  <title>SRT Subtitle Translator Pro</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;700&family=Orbitron:wght@400;700&family=Roboto+Mono:wght@300;400;700&display=swap" rel="stylesheet">
@@ -27,7 +27,7 @@
     .hstack{display:flex;gap:.75rem;align-items:center}
     .grid2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
     label{font-size:.875rem;color:var(--muted)}
-    select,input[type=text],input[type=color],textarea{width:100%;padding:.75rem;border-radius:8px;border:1px solid var(--border);background:rgba(0,0,0,.35);color:var(--ink);font-family:inherit;font-size:.875rem}
+    select,input[type=text],input[type=number]{width:100%;padding:.75rem;border-radius:8px;border:1px solid var(--border);background:rgba(0,0,0,.35);color:var(--ink);font-family:inherit;font-size:.875rem}
     textarea{min-height:80px;resize:vertical}
     .btn{user-select:none;border:none;border-radius:8px;padding:.75rem 1rem;font:700 .875rem "Orbitron",sans-serif;cursor:pointer;transition:transform .2s,box-shadow .2s}
     .btn:disabled{opacity:.5;cursor:not-allowed}
@@ -40,7 +40,7 @@
     .kpi .key{font-size:.75rem;color:var(--muted)}
     .kpi .val{font:700 .875rem "Roboto Mono",monospace;color:var(--neon)}
     .progress-bar{height:4px;background:var(--neon);width:0;transition:width .3s ease-out}
-    .preview{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+    .preview{display:grid;grid-template-columns:1fr;gap:.75rem}
     .pane{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
     .pane h3{margin:0;padding:.75rem;border-bottom:1px solid var(--border);font:700 .875rem "Orbitron",sans-serif;color:var(--neon)}
     .pane .body{padding:.75rem;max-height:200px;overflow:auto;direction:ltr;text-align:left;font:.875rem "Roboto Mono",monospace}
@@ -66,8 +66,8 @@
 <main class="app" id="app">
   <section class="card">
     <div class="drop" id="drop">
-      <div>فایل یا ZIP را رها کنید یا کلیک کنید</div>
-      <div class="badge">SRT / VTT / ASS / ZIP</div>
+      <div>فایل‌ها یا ZIP را رها کنید یا کلیک کنید</div>
+      <div class="badge">🗒️SRT 📙 VTT 📑 ASS 🗄️ ZIP🗂️</div>
       <input id="file" type="file" accept=".srt,.vtt,.ass,.zip" multiple class="hidden">
     </div>
     <div class="hstack">
@@ -76,37 +76,29 @@
     </div>
     <div class="grid2">
       <div>
-        <label>زبان مبدأ</label>
+        <label>زبان زیرنویس ورودی </label>
         <select id="src">
           <option value="auto">تشخیص خودکار</option>
           <option value="en">English</option><option value="de">German</option><option value="fr">French</option>
           <option value="es">Spanish</option><option value="it">Italian</option><option value="ru">Russian</option>
           <option value="ja">Japanese</option><option value="ko">Korean</option><option value="zh">Chinese</option>
-          <option value="ar">Arabic</option>
+          <option value="ar">عربی</option>
         </select>
       </div>
       <div>
-        <label>زبان مقصد</label>
+        <label>زبان خروجی</label>
         <select id="tgt">
           <option value="fa">فارسی</option>
           <option value="en">English</option><option value="de">German</option><option value="fr">French</option>
           <option value="es">Spanish</option><option value="it">Italian</option><option value="ru">Russian</option>
           <option value="ja">Japanese</option><option value="ko">Korean</option><option value="zh">Chinese</option>
-          <option value="ar">Arabic</option>
+          <option value="ar">عربی</option>
         </select>
       </div>
     </div>
-    <div class="grid2">
-      <button id="modeExclusive" class="btn btn-ghost">Exclusive</button>
-      <button id="modeExaggerated" class="btn btn-ghost">Exaggerated</button>
-      <button id="modeOffline" class="btn btn-ghost">Offline</button>
-    </div>
-    <div id="modeInfoExclusive" class="hidden" style="font-size:.75rem;color:var(--muted)">سریع‌تر / استاندارد / معمولی</div>
-    <div id="modeInfoExaggerated" class="hidden" style="font-size:.75rem;color:var(--muted)">کندتر / لهجه سفارشی / یادداشت تولیدکننده</div>
-    <div id="modeInfoOffline" class="hidden" style="font-size:.75rem;color:var(--muted)">ترجمه آفلاین با دیکشنری محلی</div>
-    <div id="advancedSettings" class="card hidden">
+    <div id="advancedSettings" class="card">
       <h3>تنظیمات پیشرفته</h3>
-      <label>واژه‌نامه (from => to)</label>
+      <label>ترجمک سفارشی (from => to)</label>
       <textarea id="glossary" placeholder="war => جنگ&#10;AI => هوش مصنوعی"></textarea>
       <div class="grid2">
         <div>
@@ -122,16 +114,33 @@
           <label for="filterProfanity">فیلتر الفاظ رکیک</label>
         </div>
       </div>
+      <div class="grid2">
+        <div>
+          <label>تاخیر (ثانیه)</label>
+          <input type="number" id="delay" min="0" step="0.1" value="0" placeholder="0.0">
+        </div>
+        <div>
+          <label>فشرده‌سازی متن</label>
+          <input type="checkbox" id="compressText">
+        </div>
+      </div>
+      <div class="grid2">
+        <div>
+          <label>نام سند خروجی</label>
+          <input type="text" id="prefix" placeholder="مثال: [ترجمه]">
+        </div>
+        <div>
+          <label>فرمت</label>
+          <input type="text" id="suffix" placeholder="مثال:.srt ]">
+        </div>
+      </div>
       <input type="text" id="introMsg" placeholder="پیام در ابتدا">
       <input type="text" id="halfMsg" placeholder="پیام در وسط">
       <input type="text" id="endMsg" placeholder="پیام در انتها">
     </div>
 
     <div class="kpi">
-      <div><span class="key">عنوان</span><div id="kTitle" class="val fileName">--</div></div>
-      <div><span class="key">فرمت</span><span id="kFmt" class="val">--</span></div>
-      <div><span class="key">تعداد</span><span id="kCues" class="val">0</span></div>
-      <div><span class="key">کاراکتر</span><span id="kChars" class="val">0</span></div>
+      <div><span class="key">تعداد فایل</span><span id="kFiles" class="val">0</span></div>
       <div><span class="key">وضعیت</span><span id="kStatus" class="val">WAIT</span></div>
       <div><span class="key">پیشرفت</span><span id="kProg" class="val">0%</span></div>
     </div>
@@ -139,22 +148,18 @@
 
     <div class="hstack">
       <button id="btnTranslate" class="btn btn-primary" disabled>شروع ترجمه</button>
-      <button id="btnDownload" class="btn btn-success" disabled>دانلود</button>
+      <button id="btnDownload" class="btn btn-success" disabled>دانلود ZIP</button>
     </div>
   </section>
 
   <section class="card">
     <div class="preview">
       <div class="pane">
-        <h3>> اصلی</h3>
-        <div class="body" id="pOrig">—</div>
-      </div>
-      <div class="pane">
-        <h3>> ترجمه‌شده</h3>
-        <div class="body" id="pTran">—</div>
+        <h3> پیش‌نمایش</h3>
+        <div class="body" id="pPreview">—</div>
       </div>
     </div>
-    <h3>> لاگ سیستم</h3>
+    <h3> لاگ سیستم</h3>
     <div class="log" id="log"></div>
   </section>
 </main>
@@ -175,12 +180,12 @@ const log = (msg, cls = 'info') => {
 };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const LANG = { en:'English',fa:'Persian',de:'German',fr:'French',es:'Spanish',it:'Italian',ru:'Russian',ja:'Japanese',ko:'Korean',zh:'Chinese',ar:'Arabic' };
-let state = { name:'', ext:'', raw:'', cues:[], kind:'', chars:0, assHeader:'', output:'', outName:'' };
+let state = { files: [], translated: [], output: [] };
 
 // ---------- فایل و ZIP ----------
 const readText = file => new Promise((res, rej) => {
   const reader = new FileReader();
-  reader.onload = e => res(e.target.result);
+  reader.onload = e => res({ name: file.name, text: e.target.result });
   reader.onerror = rej;
   reader.readAsText(file);
 });
@@ -188,9 +193,9 @@ const extractZip = async (file) => {
   const zip = await JSZip.loadAsync(file);
   const subs = [];
   zip.forEach((path, zipEntry) => {
-    if (/\.(srt|vtt|ass)$/i.test(path)) subs.push({ name: path.split('/').pop(), async text() { return zipEntry.async('string'); } });
+    if (/\.(srt|vtt|ass)$/i.test(path)) subs.push({ name: path.split('/').pop(), async text() { return { name: path.split('/').pop(), text: await zipEntry.async('string') }; } });
   });
-  return Promise.all(subs.map(async s => ({ name: s.name, text: await s.text() })));
+  return Promise.all(subs.map(async s => await s.text()));
 };
 
 // ---------- Parser ----------
@@ -239,12 +244,56 @@ const parseASS = t => {
 };
 
 // ---------- Build ----------
-const buildSRT = (cues, texts, addBOM) => (addBOM ? '\ufeff' : '') + cues.map((c, i) => `${c.idx}\n${c.time}\n${texts[i] || c.text}`).join('\n\n');
-const buildVTT = (orig, cues, texts, addBOM) => {
-  const header = /^WEBVTT/i.test(orig) ? orig.split(/\n\n+/)[0] : 'WEBVTT';
-  return (addBOM ? '\ufeff' : '') + header + '\n\n' + cues.map((c, i) => (c.id ? c.id + '\n' : '') + `${c.time}\n${texts[i] || c.text}`).join('\n\n');
+const buildSRT = (cues, texts, addBOM, delay) => {
+  const adjustTime = (time, delayMs) => {
+    const [h, m, s, ms] = time.split(' --> ').map(t => t.split(/[:,]/).map(Number));
+    const [sh, sm, ss, sms] = ms;
+    const [eh, em, es, ems] = ms;
+    const startMs = (sh * 3600 + sm * 60 + ss) * 1000 + sms;
+    const endMs = (eh * 3600 + em * 60 + es) * 1000 + ems;
+    const newStartMs = Math.max(0, startMs + delayMs);
+    const newEndMs = Math.max(newStartMs, endMs + delayMs);
+    const newSh = Math.floor(newStartMs / 3600000); newStartMs %= 3600000;
+    const newSm = Math.floor(newStartMs / 60000); newStartMs %= 60000;
+    const newSs = Math.floor(newStartMs / 1000); const newSms = newStartMs % 1000;
+    const newEh = Math.floor(newEndMs / 3600000); newEndMs %= 3600000;
+    const newEm = Math.floor(newEndMs / 60000); newEndMs %= 60000;
+    const newEs = Math.floor(newEndMs / 1000); const newEms = newEndMs % 1000;
+    return `${newSh}:${newSm.toString().padStart(2, '0')}:${newSs.toString().padStart(2, '0')},${newSms.toString().padStart(3, '0')} --> ${newEh}:${newEm.toString().padStart(2, '0')}:${newEs.toString().padStart(2, '0')},${newEms.toString().padStart(3, '0')}`;
+  };
+  return (addBOM ? '\ufeff' : '') + cues.map((c, i) => {
+    const newTime = adjustTime(c.time, delay * 1000);
+    const text = texts[i] || c.text;
+    const finalText = (text.includes('\n') ? text.split('\n').map(t => `${prefix}${t}${suffix}`).join('\n') : `${prefix}${text}${suffix}`).trim();
+    return `${c.idx}\n${newTime}\n${finalText}`;
+  }).join('\n\n');
 };
-const buildASS = (orig, cues, texts, addBOM) => {
+const buildVTT = (orig, cues, texts, addBOM, delay) => {
+  const header = /^WEBVTT/i.test(orig) ? orig.split(/\n\n+/)[0] : 'WEBVTT';
+  const adjustTime = (time, delayMs) => {
+    const [start, end] = time.split(' --> ').map(t => t.split(/[:,]/).map(Number));
+    const [sh, sm, ss, sms] = start;
+    const [eh, em, es, ems] = end;
+    const startMs = (sh * 3600 + sm * 60 + ss) * 1000 + sms;
+    const endMs = (eh * 3600 + em * 60 + es) * 1000 + ems;
+    const newStartMs = Math.max(0, startMs + delayMs);
+    const newEndMs = Math.max(newStartMs, endMs + delayMs);
+    const newSh = Math.floor(newStartMs / 3600000); newStartMs %= 3600000;
+    const newSm = Math.floor(newStartMs / 60000); newStartMs %= 60000;
+    const newSs = Math.floor(newStartMs / 1000); const newSms = newStartMs % 1000;
+    const newEh = Math.floor(newEndMs / 3600000); newEndMs %= 3600000;
+    const newEm = Math.floor(newEndMs / 60000); newEndMs %= 60000;
+    const newEs = Math.floor(newEndMs / 1000); const newEms = newEndMs % 1000;
+    return `${newSh}:${newSm.toString().padStart(2, '0')}:${newSs.toString().padStart(2, '0')}.${newSms.toString().padStart(3, '0')} --> ${newEh}:${newEm.toString().padStart(2, '0')}:${newEs.toString().padStart(2, '0')}.${newEms.toString().padStart(3, '0')}`;
+  };
+  return (addBOM ? '\ufeff' : '') + header + '\n\n' + cues.map((c, i) => {
+    const newTime = adjustTime(c.time, delay * 1000);
+    const text = texts[i] || c.text;
+    const finalText = (text.includes('\n') ? text.split('\n').map(t => `${prefix}${t}${suffix}`).join('\n') : `${prefix}${text}${suffix}`).trim();
+    return (c.id ? c.id + '\n' : '') + `${newTime}\n${finalText}`;
+  }).join('\n\n');
+};
+const buildASS = (orig, cues, texts, addBOM, delay) => {
   if (!cues.length) return orig;
   const before = orig.slice(0, orig.indexOf('[Events]') + 8);
   const after = orig.slice(orig.indexOf('[Events]') + 8).replace(/\r/g, '');
@@ -254,89 +303,41 @@ const buildASS = (orig, cues, texts, addBOM) => {
   const fields = fmtLine.replace(/^Format:/i, '').split(',').map(s => s.trim());
   const textIdx = Math.max(fields.findIndex(f => /^Text$/i.test(f)), fields.length - 1);
   let c = 0;
+  const adjustTime = (time, delayMs) => {
+    const [start, end] = time.split(' --> ').map(t => t.split(/[:,]/).map(Number));
+    const [sh, sm, ss, sms] = start;
+    const [eh, em, es, ems] = end;
+    const startMs = (sh * 3600 + sm * 60 + ss) * 1000 + sms;
+    const endMs = (eh * 3600 + em * 60 + es) * 1000 + ems;
+    const newStartMs = Math.max(0, startMs + delayMs);
+    const newEndMs = Math.max(newStartMs, endMs + delayMs);
+    const newSh = Math.floor(newStartMs / 3600000); newStartMs %= 3600000;
+    const newSm = Math.floor(newStartMs / 60000); newStartMs %= 60000;
+    const newSs = Math.floor(newStartMs / 1000); const newSms = newStartMs % 1000;
+    const newEh = Math.floor(newEndMs / 3600000); newEndMs %= 3600000;
+    const newEm = Math.floor(newEndMs / 60000); newEndMs %= 60000;
+    const newEs = Math.floor(newEndMs / 1000); const newEms = newEndMs % 1000;
+    return `${newSh}:${newSm.toString().padStart(2, '0')}:${newSs.toString().padStart(2, '0')}.${newSms.toString().padStart(3, '0')} --> ${newEh}:${newEm.toString().padStart(2, '0')}:${newEs.toString().padStart(2, '0')}.${newEms.toString().padStart(3, '0')}`;
+  };
   const rebuilt = lines.map(l => {
     if (/^Dialogue:/i.test(l)) {
       const aft = l.replace(/^Dialogue:\s*/i, '');
       const parts = aft.split(/,(?=(?:[^\{\}]|\{[^\}]*\})*$)/);
-      const left = parts.slice(0, textIdx);
+      const timePart = parts[1].split(' --> ');
+      const newTime = adjustTime(parts[1], delay * 1000);
+      const left = parts.slice(0, 1).concat([newTime]).concat(parts.slice(2, textIdx));
       const newText = texts[c] !== undefined ? texts[c] : parts.slice(textIdx).join(',');
+      const finalText = (newText.includes('\n') ? newText.split('\n').map(t => `${prefix}${t}${suffix}`).join('\n') : `${prefix}${newText}${suffix}`).trim();
       c++;
-      return 'Dialogue: ' + left.join(',') + ',' + newText;
+      return 'Dialogue: ' + left.join(',') + ',' + finalText;
     }
     return l;
   }).join('\n');
   return (addBOM ? '\ufeff' : '') + before + rebuilt;
 };
 
-// ---------- Glossary ----------
-const parseGlossary = txt => {
-  const p = []; if (!txt) return p;
-  for (const l of txt.split(/\n+/)) {
-    const [f, ...t] = l.split('=>').map(s => s.trim());
-    if (f && t.length) p.push([f, t.join('=>')]);
-  }
-  return p;
-};
-const applyGlossary = (text, pairs, pre = true) => {
-  let out = text;
-  pairs.forEach(([f, t], i) => {
-    const token = `§§G${i}§§`;
-    const re = new RegExp(f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
-    out = pre ? out.replace(re, token) : out.replace(new RegExp(token, 'g'), t);
-  });
-  return out;
-};
-
-// ---------- Offline Dictionary ----------
-let dictionary = new Map();
-
-async function loadOfflineDictionary() {
-  try {
-    const response = await fetch('Data/EnglishPersianWordDatabase.txt');
-    const text = await response.text();
-    const lines = text.split('\n');
-    for (let line of lines) {
-      if (line.trim()) {
-        const [english, persian] = line.split('=');
-        if (english && persian) {
-          dictionary.set(english.trim().toLowerCase(), persian.trim());
-        }
-      }
-    }
-    log(`[DICT] دیکشنری آفلاین لود شد (${dictionary.size} کلمه)`, 'ok');
-  } catch (error) {
-    log(`[ERR] خطا در لود دیکشنری آفلاین: ${error.message}`, 'err');
-  }
-}
-
-function translateOffline(texts) {
-  return texts.map(text => {
-    let result = applyGlossary(text.replace(/<(?!\/?(i|b|u)\b)[^>]*>/g, ''), parseGlossary($('#glossary').value));
-    const words = result.split(/\b/);
-    const translated = words.map(word => {
-      const lowerWord = word.toLowerCase();
-      return dictionary.has(lowerWord) ? dictionary.get(lowerWord) : word;
-    });
-    result = translated.join('');
-    return applyGlossary(result, parseGlossary($('#glossary').value), false);
-  });
-}
-
-// ---------- Translation ----------
-const translateLibre = async (txts, src, tgt) => {
-  const batch = txts.map(t => applyGlossary(t.replace(/<(?!\/?(i|b|u)\b)[^>]*>/g, ''), parseGlossary($('#glossary').value)));
-  const res = await fetch('https://libretranslate.de/translate', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ q: batch, source: src === 'auto' ? 'en' : src, target: tgt })
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const data = await res.json();
-  const tr = Array.isArray(data.translatedText) ? data.translatedText : [data.translatedText];
-  return tr.map(t => applyGlossary(t, parseGlossary($('#glossary').value), false));
-};
-
-const translatePollinations = async (txts, src, tgt, style, intro, half, end) => {
+// ---------- Translation with ☬SHΞN™ Core ----------
+const translateSHENCore = async (txts, src, tgt, style, intro, half, end) => {
   const stylePrompt = { colloquial: 'محاوره‌ای و روان', academic: 'رسمی و دقیق', adult: 'بدون سانسور' }[style] || '';
   const prompt = `ترجمه از ${LANG[src] || 'انگلیسی'} به ${LANG[tgt]} (${stylePrompt}) و حفظ خط‌بندی:\n${txts.map((t, i) => `${i + 1}. ${t}`).join('\n')}${intro ? `\nدر خط 1 اضافه کن: ${intro}` : ''}${half ? `\nدر خط ${Math.floor(txts.length / 2)} اضافه کن: ${half}` : ''}${end ? `\nدر آخر اضافه کن: ${end}` : ''}`;
   const res = await fetch('https://text.pollinations.ai/openai', {
@@ -352,11 +353,14 @@ const translatePollinations = async (txts, src, tgt, style, intro, half, end) =>
 
 // ---------- State ----------
 const resetUI = () => {
-  state = { name: '', ext: '', raw: '', cues: [], kind: '', chars: 0, assHeader: '', output: '', outName: '' };
-  $('#kTitle').textContent = '--'; $('#kFmt').textContent = '--'; $('#kCues').textContent = '0'; $('#kChars').textContent = '0';
-  $('#kStatus').textContent = 'WAIT'; $('#kProg').textContent = '0%'; $('#progressBar').style.width = '0';
-  $('#pOrig').textContent = '—'; $('#pTran').textContent = '—';
-  $('#btnTranslate').disabled = true; $('#btnDownload').disabled = true;
+  state = { files: [], translated: [], output: [] };
+  $('#kFiles').textContent = '0';
+  $('#kStatus').textContent = 'WAIT';
+  $('#kProg').textContent = '0%';
+  $('#progressBar').style.width = '0';
+  $('#pPreview').textContent = '—';
+  $('#btnTranslate').disabled = true;
+  $('#btnDownload').disabled = true;
   $('#log').innerHTML = '';
 };
 
@@ -366,42 +370,30 @@ const drop = $('#drop'), fileInput = $('#file');
 ['dragenter', 'dragover'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add('drag'); }));
 ['dragleave', 'drop'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove('drag'); }));
 drop.addEventListener('drop', ev => {
-  const files = ev.dataTransfer.files;
-  if (files.length) handleFiles(files[0]);
+  const files = Array.from(ev.dataTransfer.files);
+  if (files.length) handleFiles(files);
 });
 fileInput.addEventListener('change', ev => {
-  if (ev.target.files.length) handleFiles(ev.target.files[0]);
+  const files = Array.from(ev.target.files);
+  if (files.length) handleFiles(files);
 });
 
-const handleFiles = async (file) => {
-  if (file.size > 10 * 1024 * 1024) { log('[ERR] حداکثر ۱۰ مگابایت', 'err'); return; }
+const handleFiles = async (files) => {
+  if (files.some(f => f.size > 10 * 1024 * 1024)) { log('[ERR] حداکثر ۱۰ مگابایت برای هر فایل', 'err'); return; }
   resetUI();
-  if (file.type === 'application/zip' || /\.zip$/i.test(file.name)) {
-    const subs = await extractZip(file);
-    if (!subs.length) { log('[ERR] ZIP بدون زیرنویس معتبر', 'err'); return; }
-    const f = subs[0];
-    analyze(f.text, f.name);
-  } else {
-    const text = await readText(file);
-    analyze(text, file.name);
-  }
-};
-
-const analyze = (text, name) => {
-  const ext = name.split('.').pop().toLowerCase();
-  let parsed;
-  if (ext === 'srt') parsed = parseSRT(text);
-  else if (ext === 'vtt') parsed = parseVTT(text);
-  else if (ext === 'ass') parsed = parseASS(text);
-  else { log('[ERR] فرمت پشتیبانی نمی‌شود', 'err'); return; }
-  state = { name, ext, raw: text, cues: parsed.cues, kind: ext, chars: parsed.chars, assHeader: parsed.head || '', output: '', outName: '' };
-  $('#kTitle').textContent = name.replace(/\.[^.]+$/, '');
-  $('#kFmt').textContent = ext.toUpperCase();
-  $('#kCues').textContent = state.cues.length;
-  $('#kChars').textContent = state.chars;
+  const filePromises = files.map(file => {
+    if (file.type === 'application/zip' || /\.zip$/i.test(file.name)) {
+      return extractZip(file).then(subs => subs.map(s => s));
+    } else {
+      return readText(file).then(data => [data]);
+    }
+  });
+  const allFiles = (await Promise.all(filePromises)).flat();
+  state.files = allFiles.map(f => ({ name: f.name, ...parseSRT(f.text) })).filter(f => f.cues.length > 0);
+  $('#kFiles').textContent = state.files.length;
   $('#kStatus').textContent = 'READY';
-  if (state.cues[0]) $('#pOrig').textContent = state.cues[0].text;
-  log(`[FILE] ${name} بارگذاری شد (${state.cues.length} cue)`, 'ok');
+  if (state.files[0]?.cues[0]) $('#pPreview').textContent = state.files[0].cues[0].text;
+  log(`[FILE] ${state.files.length} فایل بارگذاری شد`, 'ok');
   $('#btnTranslate').disabled = false;
 };
 
@@ -417,108 +409,65 @@ $('#btnLoadUrl').addEventListener('click', async () => {
     if (!res.ok) throw new Error(res.statusText);
     const text = await res.text();
     const name = u.pathname.split('/').pop();
-    analyze(text, name);
+    state.files = [{ name, ...parseSRT(text) }].filter(f => f.cues.length > 0);
+    $('#kFiles').textContent = state.files.length;
+    $('#kStatus').textContent = 'READY';
+    if (state.files[0]?.cues[0]) $('#pPreview').textContent = state.files[0].cues[0].text;
+    log(`[FILE] ${name} بارگذاری شد`, 'ok');
+    $('#btnTranslate').disabled = false;
   } catch (e) { log('[ERR] ' + e.message, 'err'); }
 });
 
-// ---------- حالت ترجمه ----------
-let selectedMode = null;
-
-function setMode(mode, button, info) {
-  selectedMode = mode;
-  $('#modeExclusive').className = 'btn btn-ghost';
-  $('#modeExaggerated').className = 'btn btn-ghost';
-  $('#modeOffline').className = 'btn btn-ghost';
-  $(`#${button}`).className = 'btn btn-primary';
-  $('#modeInfoExclusive').classList.add('hidden');
-  $('#modeInfoExaggerated').classList.add('hidden');
-  $('#modeInfoOffline').classList.add('hidden');
-  $(`#modeInfo${info}`).classList.remove('hidden');
-  $('#advancedSettings').classList.toggle('hidden', mode !== 'exaggerated');
-  $('#btnTranslate').disabled = !state.cues.length;
-}
-
-$('#modeExclusive').onclick = () => setMode('exclusive', 'modeExclusive', 'Exclusive');
-$('#modeExaggerated').onclick = () => setMode('exaggerated', 'modeExaggerated', 'Exaggerated');
-$('#modeOffline').onclick = () => setMode('offline', 'modeOffline', 'Offline');
-
 // ---------- ترجمه با Progress ----------
 $('#btnTranslate').onclick = async () => {
-  if (!selectedMode || !state.cues.length) return;
+  if (!state.files.length) return;
   $('#btnTranslate').disabled = true;
   $('#btnDownload').disabled = true;
-  log(`[TRANSLATE] شروع (${selectedMode})`, 'info');
+  log('[TRANSLATE] شروع با ☬SHΞN™ Core', 'info');
   try {
     const src = $('#src').value, tgt = $('#tgt').value;
-    const batchSize = 5, charLimit = 42, cpsLimit = 20, addBOM = true;
-    const texts = state.cues.map(c => c.text);
-    const durations = state.cues.map((c, i) => {
-      const next = state.cues[i + 1];
-      const end = next ? next.time.split(' --> ')[0] : c.time.split(' --> ')[1];
-      const [sh, sm, ss, sms] = c.time.split(' --> ')[0].split(/[:,]/).map(Number);
-      const [eh, em, es, ems] = end.split(/[:,]/).map(Number);
-      const ms = (eh * 3600 + em * 60 + es) * 1000 + ems - (sh * 3600 + sm * 60 + ss) * 1000 - sms;
-      return Math.max(ms, 0);
-    });
-    let translated = [];
-    const total = texts.length;
+    const style = $('#translationStyle').value;
+    const intro = $('#introMsg').value, half = $('#halfMsg').value, end = $('#endMsg').value;
+    const delay = parseFloat($('#delay').value) || 0;
+    const compress = $('#compressText').checked;
+    const prefix = $('#prefix').value || '';
+    const suffix = $('#suffix').value || '';
+    const total = state.files.length;
     let done = 0;
 
-    if (selectedMode === 'exclusive') {
-      for (let i = 0; i < total; i += batchSize) {
-        const batch = texts.slice(i, i + batchSize);
-        try {
-          const res = await translateLibre(batch, src, tgt);
-          translated.push(...res);
-        } catch (e) {
-          log(`[ERR] خطا در API LibreTranslate: ${e.message}, سوئیچ به آفلاین`, 'warn');
-          translated.push(...translateOffline(batch));
-        }
-        done += batch.length;
-        const prog = Math.round((done / total) * 100);
-        $('#kProg').textContent = prog + '%';
-        $('#progressBar').style.width = prog + '%';
-        $('#kStatus').textContent = 'TRANSLATING';
-        log(`[PROGRESS] ${done}/${total} ترجمه شد (${prog}%)`, 'info');
-        await sleep(500);
-      }
-    } else if (selectedMode === 'exaggerated') {
-      const style = $('#translationStyle').value, intro = $('#introMsg').value, half = $('#halfMsg').value, end = $('#endMsg').value;
-      try {
-        translated = await translatePollinations(texts, src, tgt, style, intro, half, end);
-      } catch (e) {
-        log(`[ERR] خطا در API Pollinations: ${e.message}, سوئیچ به آفلاین`, 'warn');
-        translated = translateOffline(texts);
+    state.translated = await Promise.all(state.files.map(async file => {
+      const texts = file.cues.map(c => c.text);
+      const translated = await translateSHENCore(texts, src, tgt, style, intro, half, end);
+      if (compress) {
+        translated.forEach((t, i) => {
+          const chars = t.replace(/\s+/g, ' ').trim().length;
+          if (chars > 42) {
+            translated[i] = t.split(' ').slice(0, Math.ceil(42 / (chars / t.split(' ').length))).join(' ') + '...';
+          }
+        });
       }
       if ($('#filterProfanity').checked) {
         translated = translated.map(t => t.replace(/\b(کیر|کس|مادرجنده)\b/gi, '***'));
       }
-      $('#progressBar').style.width = '100%';
-      $('#kProg').textContent = '100%';
-      log('[PROGRESS] ترجمه کامل شد', 'ok');
-    } else if (selectedMode === 'offline') {
-      translated = translateOffline(texts);
-      $('#progressBar').style.width = '100%';
-      $('#kProg').textContent = '100%';
-      log('[PROGRESS] ترجمه آفلاین کامل شد', 'ok');
-    }
+      done++;
+      const prog = Math.round((done / total) * 100);
+      $('#kProg').textContent = prog + '%';
+      $('#progressBar').style.width = prog + '%';
+      $('#kStatus').textContent = 'TRANSLATING';
+      await sleep(500);
+      return { name: file.name, cues: file.cues, translated };
+    }));
 
-    translated = translated.map((t, i) => {
-      const dur = durations[i] / 1000;
-      const chars = t.replace(/\s+/g, ' ').trim().length;
-      if (dur && (chars / dur) > cpsLimit) {
-        const maxLen = Math.max(12, Math.floor(chars * (cpsLimit / (chars / dur))));
-        return t.replace(/.{1,maxLen}(\s|$)/g, '$&\n').trim();
-      }
-      return t;
+    state.output = state.translated.map((f, i) => {
+      const file = state.files[i];
+      let output;
+      if (file.kind === 'srt') output = buildSRT(file.cues, f.translated, true, delay);
+      else if (file.kind === 'vtt') output = buildVTT(file.raw, file.cues, f.translated, true, delay);
+      else if (file.kind === 'ass') output = buildASS(file.raw, file.cues, f.translated, true, delay);
+      return { name: f.name.replace(/\.[^.]+$/, '') + '_translated.' + file.kind, content: output };
     });
-    if (translated[0]) $('#pTran').textContent = translated[0];
-    let output;
-    if (state.kind === 'srt') output = buildSRT(state.cues, translated, addBOM);
-    else if (state.kind === 'vtt') output = buildVTT(state.raw, state.cues, translated, addBOM);
-    else if (state.kind === 'ass') output = buildASS(state.raw, state.cues, translated, addBOM);
-    state.output = output;
-    state.outName = state.name.replace(/\.[^.]+$/, '') + '_translated.' + state.ext;
+
+    if (state.output[0]?.content) $('#pPreview').textContent = state.output[0].content.split('\n\n')[0].split('\n').slice(2).join('\n');
     $('#kStatus').textContent = 'DONE';
     $('#btnDownload').disabled = false;
     log('[SUCCESS] ترجمه آماده دانلود است', 'ok');
@@ -531,19 +480,20 @@ $('#btnTranslate').onclick = async () => {
 };
 
 // ---------- دانلود ----------
-$('#btnDownload').onclick = () => {
-  const blob = new Blob([state.output], { type: 'text/plain;charset=utf-8' });
+$('#btnDownload').onclick = async () => {
+  const zip = new JSZip();
+  state.output.forEach(file => zip.file(file.name, file.content));
+  const blob = await zip.generateAsync({ type: 'blob' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = state.outName;
+  a.download = 'translated_subtitles.zip';
   a.click();
   URL.revokeObjectURL(url);
-  resetUI(); // آزادسازی حافظه بعد از دانلود
+  resetUI();
 };
 
 // ---------- init ----------
-window.addEventListener('load', loadOfflineDictionary);
 resetUI();
 </script>
 </body>
