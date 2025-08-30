@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SRT Subtitle Translator Pro</title>
+  <title>SRT Subtitle Translator Pro ☬SHΞN™</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;700&family=Orbitron:wght@400;700&family=Roboto+Mono:wght@300;400;700&display=swap" rel="stylesheet">
@@ -60,7 +60,7 @@
 <body>
 <header>
   <h1>srtDICK☬SHΞNeri</h1>
-  <div class="subtitle">دیک‌شینـری اولین مترجم استاتیک ساب‌تایتل</div>
+  <div class="subtitle">دیک‌شینـری اولین مترجم استاتیک ساب‌تایتل ☬SHΞN™</div>
 </header>
 
 <main class="app" id="app">
@@ -148,7 +148,8 @@
 
     <div class="hstack">
       <button id="btnTranslate" class="btn btn-primary" disabled>شروع ترجمه</button>
-      <button id="btnDownload" class="btn btn-success" disabled>دانلود ZIP</button>
+      <button id="btnDownloadSingle" class="btn btn-success" disabled>دانلود تک‌فایل</button>
+      <button id="btnDownloadZip" class="btn btn-success" disabled>دانلود ZIP</button>
     </div>
   </section>
 
@@ -179,7 +180,7 @@ const log = (msg, cls = 'info') => {
   $('#log').scrollTop = $('#log').scrollHeight;
 };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const LANG = { en:'English',fa:'Persian',de:'German',fr:'French',es:'Spanish',it:'Italian',ru:'Russian',ja:'Japanese',ko:'Korean',zh:'Chinese',ar:'Arabic' };
+const LANG = { en:'English', fa:'Persian', de:'German', fr:'French', es:'Spanish', it:'Italian', ru:'Russian', ja:'Japanese', ko:'Korean', zh:'Chinese', ar:'Arabic' };
 let state = { files: [], translated: [], output: [] };
 
 // ---------- فایل و ZIP ----------
@@ -206,7 +207,7 @@ const parseSRT = t => {
     const l = b.split('\n');
     if (l.length >= 2) { cues.push({ type: 'srt', idx: l[0].trim(), time: l[1].trim(), text: l.slice(2).join('\n'), raw: b }); chars += cues.at(-1).text.length; }
   }
-  return { cues, chars };
+  return { cues, chars, kind: 'srt' };
 };
 const parseVTT = t => {
   const clean = t.replace(/\r/g, '').trim();
@@ -220,12 +221,12 @@ const parseVTT = t => {
     cues.push({ type: 'vtt', id: start ? l[0] : null, time: l[start], text: l.slice(start + 1).join('\n'), raw: c });
     chars += cues.at(-1).text.length;
   }
-  return { cues, chars };
+  return { cues, chars, kind: 'vtt' };
 };
 const parseASS = t => {
   const clean = t.replace(/\r/g, '');
   const events = clean.indexOf('[Events]');
-  if (events < 0) return { cues: [], chars: 0, header: clean };
+  if (events < 0) return { cues: [], chars: 0, header: clean, kind: 'ass' };
   const head = clean.slice(0, events + 8);
   const lines = clean.slice(events + 8).split('\n').map(l => l.trim());
   const fmtLine = lines.find(l => /^Format:/i.test(l)) || 'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text';
@@ -240,15 +241,15 @@ const parseASS = t => {
       chars += cues.at(-1).text.length;
     }
   }
-  return { cues, chars, fmtLine, head };
+  return { cues, chars, fmtLine, head, kind: 'ass' };
 };
 
 // ---------- Build ----------
 const buildSRT = (cues, texts, addBOM, delay) => {
   const adjustTime = (time, delayMs) => {
-    const [h, m, s, ms] = time.split(' --> ').map(t => t.split(/[:,]/).map(Number));
-    const [sh, sm, ss, sms] = ms;
-    const [eh, em, es, ems] = ms;
+    const [start, end] = time.split(' --> ').map(t => t.split(/[:,]/).map(Number));
+    const [sh, sm, ss, sms] = start;
+    const [eh, em, es, ems] = end;
     const startMs = (sh * 3600 + sm * 60 + ss) * 1000 + sms;
     const endMs = (eh * 3600 + em * 60 + es) * 1000 + ems;
     const newStartMs = Math.max(0, startMs + delayMs);
@@ -323,7 +324,6 @@ const buildASS = (orig, cues, texts, addBOM, delay) => {
     if (/^Dialogue:/i.test(l)) {
       const aft = l.replace(/^Dialogue:\s*/i, '');
       const parts = aft.split(/,(?=(?:[^\{\}]|\{[^\}]*\})*$)/);
-      const timePart = parts[1].split(' --> ');
       const newTime = adjustTime(parts[1], delay * 1000);
       const left = parts.slice(0, 1).concat([newTime]).concat(parts.slice(2, textIdx));
       const newText = texts[c] !== undefined ? texts[c] : parts.slice(textIdx).join(',');
@@ -360,7 +360,8 @@ const resetUI = () => {
   $('#progressBar').style.width = '0';
   $('#pPreview').textContent = '—';
   $('#btnTranslate').disabled = true;
-  $('#btnDownload').disabled = true;
+  $('#btnDownloadSingle').disabled = true;
+  $('#btnDownloadZip').disabled = true;
   $('#log').innerHTML = '';
 };
 
@@ -389,7 +390,13 @@ const handleFiles = async (files) => {
     }
   });
   const allFiles = (await Promise.all(filePromises)).flat();
-  state.files = allFiles.map(f => ({ name: f.name, ...parseSRT(f.text) })).filter(f => f.cues.length > 0);
+  state.files = allFiles.map(f => {
+    const ext = f.name.split('.').pop().toLowerCase();
+    if (ext === 'srt') return { name: f.name, ...parseSRT(f.text) };
+    if (ext === 'vtt') return { name: f.name, ...parseVTT(f.text) };
+    if (ext === 'ass') return { name: f.name, ...parseASS(f.text) };
+    return null;
+  }).filter(f => f && f.cues.length > 0);
   $('#kFiles').textContent = state.files.length;
   $('#kStatus').textContent = 'READY';
   if (state.files[0]?.cues[0]) $('#pPreview').textContent = state.files[0].cues[0].text;
@@ -409,7 +416,10 @@ $('#btnLoadUrl').addEventListener('click', async () => {
     if (!res.ok) throw new Error(res.statusText);
     const text = await res.text();
     const name = u.pathname.split('/').pop();
-    state.files = [{ name, ...parseSRT(text) }].filter(f => f.cues.length > 0);
+    const ext = name.split('.').pop().toLowerCase();
+    if (ext === 'srt') state.files = [{ name, ...parseSRT(text) }].filter(f => f.cues.length > 0);
+    else if (ext === 'vtt') state.files = [{ name, ...parseVTT(text) }].filter(f => f.cues.length > 0);
+    else if (ext === 'ass') state.files = [{ name, ...parseASS(text) }].filter(f => f.cues.length > 0);
     $('#kFiles').textContent = state.files.length;
     $('#kStatus').textContent = 'READY';
     if (state.files[0]?.cues[0]) $('#pPreview').textContent = state.files[0].cues[0].text;
@@ -422,7 +432,8 @@ $('#btnLoadUrl').addEventListener('click', async () => {
 $('#btnTranslate').onclick = async () => {
   if (!state.files.length) return;
   $('#btnTranslate').disabled = true;
-  $('#btnDownload').disabled = true;
+  $('#btnDownloadSingle').disabled = true;
+  $('#btnDownloadZip').disabled = true;
   log('[TRANSLATE] شروع با ☬SHΞN™ Core', 'info');
   try {
     const src = $('#src').value, tgt = $('#tgt').value;
@@ -437,7 +448,9 @@ $('#btnTranslate').onclick = async () => {
 
     state.translated = await Promise.all(state.files.map(async file => {
       const texts = file.cues.map(c => c.text);
+      log(`[DEBUG] ترجمه برای ${file.name} شروع شد`, 'info');
       const translated = await translateSHENCore(texts, src, tgt, style, intro, half, end);
+      if (translated.length !== texts.length) log('[WARN] تعداد ترجمه‌ها با متن‌ها همخوانی ندارد', 'warn');
       if (compress) {
         translated.forEach((t, i) => {
           const chars = t.replace(/\s+/g, ' ').trim().length;
@@ -464,12 +477,14 @@ $('#btnTranslate').onclick = async () => {
       if (file.kind === 'srt') output = buildSRT(file.cues, f.translated, true, delay);
       else if (file.kind === 'vtt') output = buildVTT(file.raw, file.cues, f.translated, true, delay);
       else if (file.kind === 'ass') output = buildASS(file.raw, file.cues, f.translated, true, delay);
-      return { name: f.name.replace(/\.[^.]+$/, '') + '_translated.' + file.kind, content: output };
+      log(`[DEBUG] خروجی برای ${f.name} تولید شد، طول: ${output.length} بایت`, 'info');
+      return { name: f.name.replace(/\.[^.]+$/, '') + '_translated' + suffix, content: output };
     });
 
     if (state.output[0]?.content) $('#pPreview').textContent = state.output[0].content.split('\n\n')[0].split('\n').slice(2).join('\n');
     $('#kStatus').textContent = 'DONE';
-    $('#btnDownload').disabled = false;
+    $('#btnDownloadSingle').disabled = false;
+    $('#btnDownloadZip').disabled = false;
     log('[SUCCESS] ترجمه آماده دانلود است', 'ok');
   } catch (e) {
     log('[ERR] ' + e.message, 'err');
@@ -480,9 +495,26 @@ $('#btnTranslate').onclick = async () => {
 };
 
 // ---------- دانلود ----------
-$('#btnDownload').onclick = async () => {
+$('#btnDownloadSingle').onclick = () => {
+  if (!state.output.length) return;
+  const file = state.output[0]; // دانلود اولین فایل به‌صورت پیش‌فرض
+  const blob = new Blob([file.content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = file.name;
+  a.click();
+  URL.revokeObjectURL(url);
+  log(`[DOWNLOAD] ${file.name} دانلود شد`, 'ok');
+};
+
+$('#btnDownloadZip').onclick = async () => {
+  if (!state.output.length) return;
   const zip = new JSZip();
-  state.output.forEach(file => zip.file(file.name, file.content));
+  state.output.forEach(file => {
+    if (file.content) zip.file(file.name, file.content);
+    else log(`[WARN] محتوای ${file.name} خالی است`, 'warn');
+  });
   const blob = await zip.generateAsync({ type: 'blob' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -490,6 +522,7 @@ $('#btnDownload').onclick = async () => {
   a.download = 'translated_subtitles.zip';
   a.click();
   URL.revokeObjectURL(url);
+  log('[DOWNLOAD] ZIP دانلود شد', 'ok');
   resetUI();
 };
 
